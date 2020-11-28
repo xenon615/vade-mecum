@@ -57,6 +57,7 @@ function getPage(page)
     end
     currentPage = page
     VadeMecum_Pages:SetText(currentPage .. "/" .. pagesCount)
+    vm.MiniMap.checkZone();
 end
 
 -- +++

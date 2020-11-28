@@ -1,10 +1,10 @@
 local addonName, vm = ...
 vm.Astrolabe = {}
-local tooltip 
 
--- +++
+-- local functions
+local event, init, start
 
-function VadeMecum_OnEvent(self, event, ...) 
+function event(self, event, ...) 
     if event == "ADDON_LOADED" and ... ==  addonName then
         init()
     elseif event == "WORLD_MAP_UPDATE" then
@@ -15,7 +15,6 @@ function VadeMecum_OnEvent(self, event, ...)
 end
 
 function init () 
-    print (addonName .. " Loaded")
     SlashCmdList["VADEMECUM"] = function()  
         vm.Notes.display()
     end
@@ -23,6 +22,7 @@ function init ()
     VadeMecum_Notes = VadeMecum_Notes or {}
     vm.Astrolabe = DongleStub("Astrolabe-0.4")
     vm.MiniMap.display()
+    print(addonName .. " Loaded. Type /vm for notes list")
 end
 
 -- +++
@@ -31,7 +31,7 @@ function start()
     local main = CreateFrame("Frame", "VadeMecum")
     main:RegisterEvent("ADDON_LOADED")
     main:RegisterEvent("WORLD_MAP_UPDATE")
-    main:SetScript("OnEvent", VadeMecum_OnEvent)
+    main:SetScript("OnEvent", event)
 end 
 
 
