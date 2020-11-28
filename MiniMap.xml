@@ -1,0 +1,11 @@
+<Ui xsi:schemaLocation="http://www.blizzard.com/wow/ui/">;
+	<Frame name="MiniMapUpdateFrame" hidden="true" parent="Minimap">
+	</Frame>
+
+	<Button name="MiniMapMarkerTemplate" hidden="true"  parent="Minimap" virtual="true">
+		<Size>
+			<AbsDimension x="22" y="22"/>
+		</Size>
+		<NormalTexture file="Interface\WorldStateFrame\ColumnIcon-FlagCapture1"/>
+	</Button>
+</Ui>

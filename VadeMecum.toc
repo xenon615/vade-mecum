@@ -1,0 +1,15 @@
+## Interface: 30200
+## Title: Vade Mecum
+## Notes: Vade Mecum
+## Version: 1.0
+## SavedVariables: VadeMecum_Notes
+MiniMap.xml
+WorldMap.xml
+Utils.lua
+Notes.lua
+WorldMap.lua
+MiniMap.lua
+Config.lua
+vm.lua
+# Libraries
+libs\Astrolabe\Load.xml
