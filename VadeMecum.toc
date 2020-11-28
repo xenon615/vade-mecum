@@ -1,6 +1,7 @@
 ## Interface: 30200
 ## Title: Vade Mecum
-## Notes: Vade Mecum
+## Notes: Vade Mecum  WOW addon for notes
+## Author: xenon615 AKA Хворобей, Sirus x1
 ## Version: 1.0
 ## SavedVariables: VadeMecum_Notes
 MiniMap.xml
