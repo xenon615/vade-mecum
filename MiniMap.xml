@@ -6,7 +6,6 @@
 		<Size>
 			<AbsDimension x="22" y="22"/>
 		</Size>
-		<!-- <NormalTexture file="Interface\WorldStateFrame\ColumnIcon-FlagCapture1"/> -->
 		<NormalTexture file="Interface\GLUES\MODELS\UI_MainMenu_BurningCrusade\glow_green"/> -->
 	</Button>
 </Ui>
