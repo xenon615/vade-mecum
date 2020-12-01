@@ -41,16 +41,13 @@ function getPage(page)
     local notesCount = getn(VadeMecum_Notes) 
     pagesCount = ceil(notesCount / rowsPerPage)
     pagesCount = pagesCount == 0 and 1 or pagesCount
-    print('pagesCount', pagesCount)
     if (page < 1) or (page > pagesCount) then 
         return
     end 
-    print('page', page)
     for i = 1, rowsPerPage do
         local ii = rowsPerPage * (page - 1) + i
         print('ii', ii)
         if ii > notesCount then
-            print('hide', ii)
             items[i].row:Hide()
         else
             items[i].row:Show()
