@@ -46,7 +46,6 @@ function getPage(page)
     end 
     for i = 1, rowsPerPage do
         local ii = rowsPerPage * (page - 1) + i
-        print('ii', ii)
         if ii > notesCount then
             items[i].row:Hide()
         else
