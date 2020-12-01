@@ -6,7 +6,7 @@ local items = {}
 local listFrame, formFrame;
 
 -- local functions 
-local formatLocation, dump, sort, getPage, delete, edit, save, createForm, createList, getCoords
+local formatLocation, dump, sort, getPage, delete, edit, save, createForm, createList
 
 vm.Notes = {
     display = function()
@@ -40,13 +40,17 @@ end
 function getPage(page)
     local notesCount = getn(VadeMecum_Notes) 
     pagesCount = ceil(notesCount / rowsPerPage)
-
+    pagesCount = pagesCount == 0 and 1 or pagesCount
+    print('pagesCount', pagesCount)
     if (page < 1) or (page > pagesCount) then 
         return
     end 
+    print('page', page)
     for i = 1, rowsPerPage do
         local ii = rowsPerPage * (page - 1) + i
+        print('ii', ii)
         if ii > notesCount then
+            print('hide', ii)
             items[i].row:Hide()
         else
             items[i].row:Show()
@@ -124,15 +128,15 @@ function createForm()
 -- ---
     
     local cont = CreateFrame("Frame", nil, formFrame)
-    cont:SetSize(formFrame:GetWidth() - 20, 200)
-    cont:SetPoint("TOPLEFT", 10, -40)
+    cont:SetSize(formFrame:GetWidth() - 20, 250)
+    cont:SetPoint("TOPLEFT", 10, -10)
     cont:SetBackdrop(backDrop)
     cont:SetBackdropColor(0, 0, 0, 0.5)
 
 -- ---
 
     local scroll = CreateFrame("ScrollFrame", "VadeMecum_Form_Scroll", cont, "UIPanelScrollFrameTemplate")
-    scroll:SetSize(cont:GetWidth() - 40 , 180)
+    scroll:SetSize(cont:GetWidth() - 40 , 230)
     scroll:SetPoint("TOPLEFT", 10, -10)
 
 -- ---
@@ -154,21 +158,6 @@ function createForm()
         if h > hs then
             VadeMecum_Form_Scroll:SetVerticalScroll(h - hs)
         end
-    end)
--- ---
-
-    local t = formFrame:CreateFontString("VadeMecum_Form_Coords", "OVERLAY", "GameFontNormal")
-    t:SetPoint("TOPLEFT", 10, -10)
-
--- ---
-
-    local rb = CreateFrame("Button","VadeMecum_Edit_Refresh", formFrame, "UIPanelButtonTemplate")
-    rb:SetHeight(24)
-    rb:SetWidth(60)
-    rb:SetPoint("TOPRIGHT", -10, -5)
-    rb:SetText("Refresh")
-    rb:SetScript("OnClick", function()
-        getCoords()
     end)
 
 -- ---
@@ -311,11 +300,4 @@ function formatLocation(continent, zone)
     local continentNames, key, val = { GetMapContinents()} 
     local zoneNames , key, val = { GetMapZones(continent)}
     return continentNames[continent] .. ', ' .. zoneNames[zone]
-end
-
--- +++
-
-function getCoords()
-    local posX, posY = GetPlayerMapPosition("player")
-    VadeMecum_Form_Coords:SetText(shwcrd(posX) .. " / " .. shwcrd(posY));
 end

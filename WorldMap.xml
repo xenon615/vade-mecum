@@ -23,7 +23,7 @@
 		</Scripts>
 		<Layers>
 			<Layer level="ARTWORK">
-				<Texture name="$parentTexture" file="Interface\WorldStateFrame\ColumnIcon-FlagCapture1"/>
+				<Texture name="$parentTexture" file="Interface\GLUES\MODELS\UI_MainMenu_BurningCrusade\glow_green"/>
 					<Anchors>
 						<Anchor point="CENTER" x="0" y="0"/>
 					</Anchors>

@@ -23,6 +23,7 @@ function init ()
     vm.Astrolabe = DongleStub("Astrolabe-0.4")
     vm.MiniMap.display()
     print(addonName .. " Loaded. Type /vm for notes list")
+    
 end
 
 -- +++
