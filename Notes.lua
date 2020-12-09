@@ -79,7 +79,13 @@ function edit(index)
         ii = rowsPerPage * (currentPage - 1) + index
         text = VadeMecum_Notes[ii].note
     end
+
+    
+    local color = vm.Config.Colors[VadeMecum_Notes[ii].color] or {1,1,1}
+    VadeMecum_Edit_ColorI:SetBackdropColor(color[1], color[2], color[3])
+    
     VadeMecum_Form_Note:SetText(text)
+    UIDropDownMenu_SetSelectedValue(VadeMecum_Edit_Color, VadeMecum_Notes[ii].color)
     VadeMecum_Edit_Save:SetScript("OnClick", function() save(ii) getPage(currentPage) end)
     formFrame:Show()
 end
@@ -88,18 +94,21 @@ end
 
 function save(index)
     local posX, posY = GetPlayerMapPosition("player")
+    local color = UIDropDownMenu_GetSelectedValue(VadeMecum_Edit_Color) or 'white'
     if index == 0 then 
         local rec = {
             continent = GetCurrentMapContinent(),
             zone = GetCurrentMapZone(),
             posX = posX,
             posY = posY,
-            note = VadeMecum_Form_Note:GetText()
+            note = VadeMecum_Form_Note:GetText(),
+            color = color
         }
         table.insert(VadeMecum_Notes, rec)
         sort();
     else
         VadeMecum_Notes[index].note = VadeMecum_Form_Note:GetText()
+        VadeMecum_Notes[index].color = color
     end     
     formFrame:Hide()
 end
@@ -115,11 +124,11 @@ function createForm()
         edgeSize = 14,
         insets = {left = 3, right = 3, top = 3, bottom = 3}
     }
-    formFrame:SetSize(300, 300)
+    formFrame:SetSize(300, 400)
     formFrame:SetPoint("CENTER", 0, 0)
     formFrame:SetBackdrop(backDrop)
     formFrame:SetBackdropColor(0, 0, 0, 0.5)
-    formFrame:SetFrameStrata("DIALOG")
+    formFrame:SetFrameStrata("FULLSCREEN_DIALOG")
     
 -- ---
     
@@ -134,6 +143,10 @@ function createForm()
     local scroll = CreateFrame("ScrollFrame", "VadeMecum_Form_Scroll", cont, "UIPanelScrollFrameTemplate")
     scroll:SetSize(cont:GetWidth() - 40 , 230)
     scroll:SetPoint("TOPLEFT", 10, -10)
+
+-- ---
+
+
 
 -- ---
 
@@ -155,6 +168,48 @@ function createForm()
             VadeMecum_Form_Scroll:SetVerticalScroll(h - hs)
         end
     end)
+
+-- ---
+
+    local colorF = CreateFrame('Frame', 'VadeMecum_Edit_Color', formFrame, 'UIDropDownMenuTemplate')
+    colorF:SetFrameStrata("FULLSCREEN_DIALOG")
+    colorF:Show()
+
+    local function clicked(self)
+        UIDropDownMenu_SetSelectedID(VadeMecum_Edit_Color, self:GetID())
+        UIDropDownMenu_SetSelectedValue(VadeMecum_Edit_Color, self.value)
+        local color = vm.Config.Colors[self.value]
+        VadeMecum_Edit_ColorI:SetBackdropColor(color[1], color[2], color[3])
+    end
+    
+    UIDropDownMenu_Initialize(colorF, function(self, level)
+        for k, v in pairs(vm.Config.Colors) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = k
+            info.value = k
+            info.colorCode = ("|cff%.2x%.2x%.2x"):format(v[1] * 255, v[2] * 255, v[3] * 255)
+            info.func = clicked
+            UIDropDownMenu_AddButton(info, level)
+        end    
+    end)
+    
+    local  colorB =  CreateFrame('Button', 'VadeMecum_Edit_ColorB', formFrame, 'GameMenuButtonTemplate')
+    colorB:SetText("Color")
+    colorB:SetPoint("BOTTOMLEFT", 10, 60)
+    colorB:SetScript('OnClick', function(self, button, down) 
+        ToggleDropDownMenu(1, nil, colorF, self:GetName(), 0, 0)
+    end)
+    
+
+    local colorI = CreateFrame('Frame','VadeMecum_Edit_ColorI', formFrame)
+    colorI:SetPoint("BOTTOMLEFT", colorB:GetWidth() + 10 , 60)
+    colorI:SetSize(20,20)
+    colorI:SetBackdrop({
+        bgFile = [[Interface\Buttons\WHITE8x8]],
+        edgeFile = [[Interface\Tooltips\UI-Tooltip-Border]],
+        edgeSize = 14,
+        insets = {left = 3, right = 3, top = 3, bottom = 3}
+    }) 
 
 -- ---
 

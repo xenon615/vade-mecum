@@ -6,6 +6,6 @@
 		<Size>
 			<AbsDimension x="22" y="22"/>
 		</Size>
-		<NormalTexture file="Interface\GLUES\MODELS\UI_MainMenu_BurningCrusade\glow_green"/> -->
+		<NormalTexture file="Interface\Addons\VadeMecum\images\star"/>	
 	</Button>
 </Ui>

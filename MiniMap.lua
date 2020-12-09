@@ -86,6 +86,11 @@ function update()
                     index = index + 1
                     local marker = getMarker(index)
                     marker.id = k
+                    local texture = marker:GetNormalTexture()
+                    local color = vm.Config.Colors[v.color] or {1,1,1}
+
+                    texture:SetVertexColor(color[1], color[2], color[3], 0.6)
+
                     local result = vm.Astrolabe:PlaceIconOnMinimap(marker, v.continent, v.zone, v.posX, v.posY)
                 end  
             end

@@ -27,6 +27,9 @@ function placeMarker(index, note)
     marker:SetWidth(16)
     marker:SetHeight(16)
     marker.id = index
+    local texture = marker:GetNormalTexture()
+    local color = vm.Config.Colors[note.color] or {1,1,1}
+    texture:SetVertexColor(color[1],color[2],color[3], 0.6)
     vm.Astrolabe:PlaceIconOnWorldMap(WorldMapButton, marker, note.continent, note.zone, note.posX, note.posY)
 end
 

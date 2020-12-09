@@ -21,14 +21,16 @@
 				this:SetFrameLevel(this:GetParent():GetFrameLevel() + 1)
 			</OnLoad>
 		</Scripts>
-		<Layers>
+		<NormalTexture file="Interface\Addons\VadeMecum\images\star"/>	
+		<!-- <Layers>
 			<Layer level="ARTWORK">
-				<Texture name="$parentTexture" file="Interface\GLUES\MODELS\UI_MainMenu_BurningCrusade\glow_green"/>
+				<! <Texture name="$parentTexture" file="Interface\GLUES\MODELS\UI_MainMenu_BurningCrusade\glow_green"/> >
+				<Texture name="$parentTexture" file="Interface\Addons\VadeMecum\images\star"/>
 					<Anchors>
 						<Anchor point="CENTER" x="0" y="0"/>
 					</Anchors>
-			</Layer>
-		</Layers>
+			</Layer> 
+		</Layers> -->
 	</Button>
 	
 	<!-- Parent Frame for all World Map Note Objects -->
