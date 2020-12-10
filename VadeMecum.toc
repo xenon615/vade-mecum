@@ -2,7 +2,7 @@
 ## Title: Vade Mecum
 ## Notes: Vade Mecum  WOW addon for notes
 ## Author: xenon615 AKA Хворобей, Sirus x1
-## Version: 0.1
+## Version: 0.2
 ## SavedVariables: VadeMecum_Notes
 MiniMap.xml
 WorldMap.xml
