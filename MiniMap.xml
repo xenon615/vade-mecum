@@ -4,7 +4,7 @@
 	
 	<Button name="MiniMapMarkerTemplate" hidden="true"  parent="Minimap" virtual="true">
 		<Size>
-			<AbsDimension x="22" y="22"/>
+			<AbsDimension x="18" y="18"/>
 		</Size>
 		<NormalTexture file="Interface\Addons\VadeMecum\images\star"/>	
 	</Button>

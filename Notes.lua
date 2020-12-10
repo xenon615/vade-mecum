@@ -210,6 +210,9 @@ function createForm()
         edgeSize = 14,
         insets = {left = 3, right = 3, top = 3, bottom = 3}
     }) 
+    -- colorI:SetScript('OnClick', function(self, button, down) 
+    --     ToggleDropDownMenu(1, nil, colorF, self:GetName(), 0, 0)
+    -- end)
 
 -- ---
 
