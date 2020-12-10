@@ -133,7 +133,7 @@ function createForm()
 -- ---
     
     local cont = CreateFrame("Frame", nil, formFrame)
-    cont:SetSize(formFrame:GetWidth() - 20, 250)
+    cont:SetSize(formFrame:GetWidth() - 20, 300)
     cont:SetPoint("TOPLEFT", 10, -10)
     cont:SetBackdrop(backDrop)
     cont:SetBackdropColor(0, 0, 0, 0.5)
@@ -192,17 +192,9 @@ function createForm()
             UIDropDownMenu_AddButton(info, level)
         end    
     end)
-    
-    local  colorB =  CreateFrame('Button', 'VadeMecum_Edit_ColorB', formFrame, 'GameMenuButtonTemplate')
-    colorB:SetText("Color")
-    colorB:SetPoint("BOTTOMLEFT", 10, 60)
-    colorB:SetScript('OnClick', function(self, button, down) 
-        ToggleDropDownMenu(1, nil, colorF, self:GetName(), 0, 0)
-    end)
-    
 
-    local colorI = CreateFrame('Frame','VadeMecum_Edit_ColorI', formFrame)
-    colorI:SetPoint("BOTTOMLEFT", colorB:GetWidth() + 10 , 60)
+    local colorI = CreateFrame('Button','VadeMecum_Edit_ColorI', formFrame)
+    colorI:SetPoint("BOTTOMLEFT",  10 , 60)
     colorI:SetSize(20,20)
     colorI:SetBackdrop({
         bgFile = [[Interface\Buttons\WHITE8x8]],
@@ -210,9 +202,9 @@ function createForm()
         edgeSize = 14,
         insets = {left = 3, right = 3, top = 3, bottom = 3}
     }) 
-    -- colorI:SetScript('OnClick', function(self, button, down) 
-    --     ToggleDropDownMenu(1, nil, colorF, self:GetName(), 0, 0)
-    -- end)
+    colorI:SetScript('OnClick', function(self, button, down) 
+        ToggleDropDownMenu(1, nil, colorF, self:GetName(), 0, 0)
+    end)
 
 -- ---
 
