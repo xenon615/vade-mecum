@@ -63,7 +63,8 @@ end
 -- +++
 
 function delete(i)
-    table.remove(VadeMecum_Notes, i)
+    local  ii = rowsPerPage * (currentPage - 1) + i
+    table.remove(VadeMecum_Notes, ii)
     getPage(currentPage);
 end
 
@@ -73,19 +74,19 @@ function edit(index)
     if formFrame == nil then
         createForm()
     end
-    local text = ""
+    local text = ''
+    local color_slug = 'white'
     local ii = 0
     if index ~= 0 then
         ii = rowsPerPage * (currentPage - 1) + index
         text = VadeMecum_Notes[ii].note
+        color_slug = VadeMecum_Notes[ii].color
     end
-
-    
-    local color = vm.Config.Colors[VadeMecum_Notes[ii].color] or {1,1,1}
+    local color = vm.Config.Colors[color_slug]
     VadeMecum_Edit_ColorI:SetBackdropColor(color[1], color[2], color[3])
     
     VadeMecum_Form_Note:SetText(text)
-    UIDropDownMenu_SetSelectedValue(VadeMecum_Edit_Color, VadeMecum_Notes[ii].color)
+    UIDropDownMenu_SetSelectedValue(VadeMecum_Edit_Color, color_slug)
     VadeMecum_Edit_Save:SetScript("OnClick", function() save(ii) getPage(currentPage) end)
     formFrame:Show()
 end

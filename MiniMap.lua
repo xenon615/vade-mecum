@@ -78,10 +78,10 @@ function update()
         local px, py = GetPlayerMapPosition("player")
         local index = 0
         local maxDist = vm.Config.MinimapSize[vm.Astrolabe.minimapOutside and 'outdoor' or 'indoor'][Minimap:GetZoom()] / 2;
-
+        
         for k, v in pairs(VadeMecum_Notes) do
-            if v.zone == z then
-                local d = vm.Astrolabe:ComputeDistance(c, z, px, py, v.continent, v.zone, v.posX, v.posY)
+            if (c == v.continent) and (v.zone == z) then
+                local d = vm.Astrolabe:ComputeDistance(c, z, px, py, v.continent, v.zone, v.posX, v.posY) or 0
                 if d < maxDist  then 
                     index = index + 1
                     local marker = getMarker(index)
