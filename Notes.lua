@@ -6,7 +6,7 @@ local items = {}
 local listFrame, formFrame;
 
 -- local functions 
-local formatLocation, dump, sort, getPage, delete, edit, save, createForm, createList
+local formatLocation, dump, sort, getPage, delete, edit, save, createForm, createList, showOnMap
 
 vm.Notes = {
     display = function()
@@ -53,6 +53,8 @@ function getPage(page)
             items[i].zone:SetText(formatLocation(VadeMecum_Notes[ii].continent, VadeMecum_Notes[ii].zone))
             items[i].coords:SetText(vm.Utils.formatCoords(VadeMecum_Notes[ii].posX, VadeMecum_Notes[ii].posY))
             items[i].note:SetText(strsub(VadeMecum_Notes[ii].note, 1 , 100))
+            local color = vm.Config.Colors[VadeMecum_Notes[ii].color] or {1,1,1}
+            items[i].color:SetBackdropColor(color[1], color[2], color[3],1)
         end
     end
     currentPage = page
@@ -112,6 +114,14 @@ function save(index)
         VadeMecum_Notes[index].color = color
     end     
     formFrame:Hide()
+end
+
+-- +++
+
+function showOnMap(index)
+    local ii = rowsPerPage * (currentPage - 1) + index
+    ToggleFrame(WorldMapFrame)
+    SetMapZoom(VadeMecum_Notes[ii].continent, VadeMecum_Notes[ii].zone)
 end
 
 -- +++
@@ -234,6 +244,28 @@ end
 
 -- ---
 
+function createButton(params)
+    local b = CreateFrame("Button", params.name, params.parent, params.template)
+    if params.texture then 
+        b:SetNormalTexture(params.texture)
+    end
+    b:SetSize(params.size[1],params.size[2])
+    b:SetPoint(params.point[1], params.point[2], params.point[3])
+    if params.text then
+        b:SetText(params.text)
+    end
+    b:SetScript("OnClick", params.onClick)
+    if params.texture then 
+        b:SetScript('OnEnter', function(self)
+            self:GetNormalTexture():SetVertexColor(1, 1, 1, 0.6)
+            end)
+        b:SetScript('OnLeave', function(self)
+            self:GetNormalTexture():SetVertexColor(1, 1, 1, 1)
+        end)
+    end
+end
+
+
 function createList()
     listFrame = CreateFrame("Frame")
     listFrame:Hide();
@@ -280,63 +312,92 @@ function createList()
         items[i].coords:SetWidth(100)
         items[i].coords:SetHeight(lineHeight)
 
-        local db = CreateFrame("Button", nil, items[i].row, "UIPanelButtonTemplate")
-        db:SetHeight(24)
-        db:SetWidth(60)
-        db:SetPoint("RIGHT", -65, 0)
-        db:SetText("Edit")
-        db:SetScript("OnClick", function()
-            edit(i)
-        end)
+        items[i].color = CreateFrame("Frame", nil, items[i].row)
+        items[i].color:SetSize(32,24)
+        items[i].color:SetPoint("RIGHT", -100, 0)
+        items[i].color:SetBackdrop(backDrop)
         
-        local db = CreateFrame("Button", nil, items[i].row, "UIPanelButtonTemplate")
-        db:SetHeight(24)
-        db:SetWidth(60)
-        db:SetPoint("RIGHT", -5, 0)
-        db:SetText("Del")
-        db:SetScript("OnClick", function()
-            delete(i)
-        end)
+
+        createButton({
+            parent = items[i].row,
+            texture = 'Interface\\Addons\\VadeMecum\\images\\arrow',
+            size = {16,16},
+            point = {"RIGHT", -55, 0},
+            onClick = function() showOnMap(i) end
+        })
+
+        createButton({
+            parent = items[i].row,
+            texture = 'Interface\\Addons\\VadeMecum\\images\\pensil',
+            size = {16,16},
+            point = {"RIGHT", -32, 0},
+            onClick = function() edit(i) end
+        })
+        
+        createButton({
+            parent = items[i].row,
+            texture = 'Interface\\Addons\\VadeMecum\\images\\del',
+            size = {16,16},
+            point = {"RIGHT", -10, 0},
+            onClick = function() delete(i) end
+        })
+
 
         if i > getn(VadeMecum_Notes) then 
             items[i].row:Hide();
         end
     end
-    local nb = CreateFrame("Button", nil, listFrame, "UIPanelButtonTemplate")
-    nb:SetHeight(24)
-    nb:SetWidth(60)
-    nb:SetPoint("BOTTOMLEFT", 10, 10)
-    nb:SetText("Prev")
-    nb:SetScript("OnClick", function()
-        getPage(currentPage - 1)
-    end)
 
-    local pb = CreateFrame("Button", nil, listFrame, "UIPanelButtonTemplate")
-    pb:SetHeight(24)
-    pb:SetWidth(60)
-    pb:SetPoint("BOTTOMRIGHT", -10, 10)
-    pb:SetText("Next")
-    pb:SetScript("OnClick", function()
-        getPage(currentPage + 1)
-    end)
+    createButton({
+        parent = listFrame,
+        texture = 'Interface\\Addons\\VadeMecum\\images\\prev',
+        size = {32, 16},
+        point = {"BOTTOMLEFT", 10, 10},
+        onClick = function() getPage(currentPage - 1) end
+    })
 
-    local pb = CreateFrame("Button", nil, listFrame, "UIPanelButtonTemplate")
-    pb:SetHeight(24)
-    pb:SetWidth(60)
-    pb:SetPoint("TOPLEFT", 10, -10)
-    pb:SetText("Add")
-    pb:SetScript("OnClick", function()
-        edit(0)
-    end)
+    createButton({
+        parent = listFrame,
+        texture = 'Interface\\Addons\\VadeMecum\\images\\next',
+        size = {32,16},
+        point = {"BOTTOMRIGHT", -10, 10},
+        onClick = function() getPage(currentPage + 1) end
+    })
 
-    local pb = CreateFrame("Button", nil, listFrame, "UIPanelButtonTemplate")
-    pb:SetHeight(24)
-    pb:SetWidth(60)
-    pb:SetPoint("TOPRIGHT", -10, -10)
-    pb:SetText("Close")
-    pb:SetScript("OnClick", function()
-        listFrame:Hide()
-    end)
+    createButton({
+        parent = listFrame,
+        texture = 'Interface\\Addons\\VadeMecum\\images\\add',
+        size = {32,32},
+        point = {"TOPLEFT", 10, -10},
+        onClick = function() edit(0) end
+    })
+
+    createButton({
+        parent = listFrame,
+        texture = 'Interface\\Addons\\VadeMecum\\images\\close',
+        size = {32,32},
+        point = {"TOPRIGHT", -10, -10},
+        onClick = function() listFrame:Hide() end
+    })
+
+    -- local pb = CreateFrame("Button", nil, listFrame, "UIPanelButtonTemplate")
+    -- pb:SetHeight(24)
+    -- pb:SetWidth(60)
+    -- pb:SetPoint("TOPLEFT", 10, -10)
+    -- pb:SetText("Add")
+    -- pb:SetScript("OnClick", function()
+    --     edit(0)
+    -- end)
+
+    -- local pb = CreateFrame("Button", nil, listFrame, "UIPanelButtonTemplate")
+    -- pb:SetHeight(24)
+    -- pb:SetWidth(60)
+    -- pb:SetPoint("TOPRIGHT", -10, -10)
+    -- pb:SetText("Close")
+    -- pb:SetScript("OnClick", function()
+    --     listFrame:Hide()
+    -- end)
+
     listFrame:CreateFontString("VadeMecum_Pages", "OVERLAY", "GameFontNormal"):SetPoint("BOTTOM", -10, 10)
     getPage(currentPage)
 end
