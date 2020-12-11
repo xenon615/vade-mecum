@@ -82,7 +82,7 @@ function edit(index)
     if index ~= 0 then
         ii = rowsPerPage * (currentPage - 1) + index
         text = VadeMecum_Notes[ii].note
-        color_slug = VadeMecum_Notes[ii].color
+        color_slug = VadeMecum_Notes[ii].color or 'white'
     end
     local color = vm.Config.Colors[color_slug]
     VadeMecum_Edit_ColorI:SetBackdropColor(color[1], color[2], color[3])
