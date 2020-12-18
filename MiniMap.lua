@@ -2,8 +2,6 @@ local addonName, vm = ...
 
 local miniMapLastUpdate = 0
 local markers = {}
-local zoneHasNotes = true
-
 -- local functions
 local getMarker, enterMarker, leaveMarker, update, event
 
@@ -12,20 +10,30 @@ vm.MiniMap = {
         MiniMapUpdateFrame:RegisterEvent('ZONE_CHANGED_NEW_AREA')
         MiniMapUpdateFrame:SetScript("OnEvent", event)
         MiniMapUpdateFrame:SetScript("OnUpdate", update)
-        MiniMapUpdateFrame:Show()
+        vm.MiniMap.checkZone()
      end,
     checkZone = function()
+        if not VadeMecum_Settings.MiniMap then
+            vm.MiniMap.standby(false)
+            return
+        end
         local continent, zone = GetCurrentMapContinent(), GetCurrentMapZone()
-        local found = false
         for i = 1, #(VadeMecum_Notes) do
             if (VadeMecum_Notes[i].continent == continent) and (VadeMecum_Notes[i].zone == zone) then 
-                zoneHasNotes = true
+                vm.MiniMap.standby(true);
                 return
             end
         end
-        zoneHasNotes = false
-        for i = 1, #(markers) do
-            vm.Astrolabe:RemoveIconFromMinimap(markers[i])
+        vm.MiniMap.standby(false);
+    end,
+    standby = function(what)
+        if not what  then
+            for i = 1, #(markers) do
+                vm.Astrolabe:RemoveIconFromMinimap(markers[i])
+            end
+            MiniMapUpdateFrame:Hide()
+        else 
+            MiniMapUpdateFrame:Show()
         end
     end    
 }
@@ -64,8 +72,6 @@ end
 -- +++
 
 function update()
-    if not zoneHasNotes then return end
-
     miniMapLastUpdate = miniMapLastUpdate + 5
     local needUpdate = false
     if miniMapLastUpdate > 1000 then

@@ -20,7 +20,9 @@ function init ()
     end
     SLASH_VADEMECUM1 = '/vm' 
     VadeMecum_Notes = VadeMecum_Notes or {}
+    VadeMecum_Settings = VadeMecum_Settings or {}
     vm.Astrolabe = DongleStub("Astrolabe-0.4")
+    SetMapToCurrentZone()
     vm.MiniMap.display()
     print(addonName .. " Loaded. Type /vm for notes list")
     
