@@ -1,21 +1,28 @@
 local addonName, vm = ...
 local currentPage, rowsPerPage, pagesCount, itemEdited = 1, 10, 0, 0
 local items = {}
-local listFrame, formFrame;
+local listFrame, formFrame, mateFrame
 
 -- local functions 
-local formatLocation, dump, sort, getPage, delete, edit, save, createForm, createList, showOnMap
+local formatLocation, dump, sort, getPage, delete, edit, save, createForm, createList, showOnMap, setMate, pack, unpack, import
 
 StaticPopupDialogs["VadeMecum_Del_Confirm"] = {
-    text = "Are you sure?",
+    text = "Delete this note?",
     button1 = "Yes",
     button2 = "No",
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,
     preferredIndex = 3
-  }
-
+}
+StaticPopupDialogs["VadeMecum_Import_Confirm"] = {
+    button1 = "Accept",
+    button2 = "Decline",
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3
+}
 
 vm.Notes = {
     display = function()
@@ -23,6 +30,17 @@ vm.Notes = {
             createList()
         end
         listFrame:Show()
+    end,
+    importRequest = function(message, sender)
+        StaticPopupDialogs["VadeMecum_Import_Confirm"].text = 'Note from ' .. sender .. ' received'
+        StaticPopupDialogs["VadeMecum_Import_Confirm"].OnAccept = function(self)
+            table.insert(VadeMecum_Notes, unpack(message))
+            sort();
+            if listFrame and listFrame:IsVisible() then
+                getPage(currentPage)
+            end
+        end	
+        StaticPopup_Show('VadeMecum_Import_Confirm')
     end
 }
 
@@ -61,7 +79,7 @@ function getPage(page)
             items[i].row:Show()
             items[i].zone:SetText(formatLocation(VadeMecum_Notes[ii].continent, VadeMecum_Notes[ii].zone))
             items[i].coords:SetText(vm.Utils.formatCoords(VadeMecum_Notes[ii].posX, VadeMecum_Notes[ii].posY))
-            items[i].note:SetText(strsub(VadeMecum_Notes[ii].note, 1 , 100))
+            items[i].note:SetText(VadeMecum_Notes[ii].note and strsub(VadeMecum_Notes[ii].note, 1 , 100) or '')
             local color = vm.Config.Colors[VadeMecum_Notes[ii].color] or {1,1,1}
             items[i].color:SetBackdropColor(color[1], color[2], color[3],1)
         end
@@ -142,6 +160,109 @@ function showOnMap(index)
     local ii = rowsPerPage * (currentPage - 1) + index
     ToggleFrame(WorldMapFrame)
     SetMapZoom(VadeMecum_Notes[ii].continent, VadeMecum_Notes[ii].zone)
+end
+
+-- +++
+
+function setMate(index)
+    local ii = rowsPerPage * (currentPage - 1) + index
+    itemEdited = ii
+    if mateFrame == nil then
+        createSetMate()
+    end
+    listFrame:Hide();
+    mateFrame:Show();
+end
+
+-- +++
+
+function pack(note)
+    local separator = vm.Config.Separator
+    local fields = vm.Config.Fields
+    local result = note[fields[1]]
+    for i = 2 , #(fields) do
+        result = result .. separator .. note[fields[i]]
+    end
+    return result
+end
+
+-- +++
+
+function unpack(s)
+    local separator = vm.Config.Separator
+    local fields = vm.Config.Fields
+    result = {};
+    local ii = 0
+    for match in (s..separator):gmatch('([^' .. separator ..']+)') do
+        ii = ii + 1
+        result[fields[ii]] = ((fields[ii] == 'note') or (fields[ii] == 'color')) and match or tonumber(match);
+    end
+    return result
+end
+
+-- +++
+
+function createSetMate()
+    mateFrame = CreateFrame('Frame')
+    mateFrame:Hide();
+    local backDrop = {
+        bgFile = [[Interface\Buttons\WHITE8x8]],
+        edgeFile = [[Interface\Tooltips\UI-Tooltip-Border]],
+        edgeSize = 14,
+        insets = {left = 3, right = 3, top = 3, bottom = 3}
+    }
+
+    mateFrame:SetSize(300, 50)
+    mateFrame:SetPoint("CENTER", 0, 0)
+    mateFrame:SetBackdrop(backDrop)
+    mateFrame:SetBackdropColor(0, 0, 0, 0.8)
+    mateFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+
+    local friend = CreateFrame('Frame', 'VadeMecum_Set_Mate', mateFrame, 'UIDropDownMenuTemplate')
+    friend:SetFrameStrata("FULLSCREEN_DIALOG")
+    friend:Show()
+    local function clicked(self)
+        local packed = pack(VadeMecum_Notes[itemEdited])
+        SendAddonMessage('VadeMecum', packed, 'WHISPER', self.value);
+        mateFrame:Hide()
+        listFrame:Show()
+    end
+    local numberOfFriends, onlineFriends = GetNumFriends()
+    local friends = {}
+    for i = 1, onlineFriends  do
+        local name = GetFriendInfo(i)
+        table.insert(friends, name)
+    end
+
+    UIDropDownMenu_Initialize(friend, function(self, level)
+        for k, v in pairs(friends) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = v
+            info.value = v
+            info.func = clicked
+            UIDropDownMenu_AddButton(info, level)
+        end    
+    end)
+
+    mateFrame.friendI = createButton({
+        parent = mateFrame,
+        text = 'Friend',
+        template = 'UIPanelButtonTemplate',
+        name = 'VadeMecum_Set_MateI',
+        size = {60,32},
+        point = {"TOPLEFT",  10 , -10},
+        onClick = function(self)
+            ToggleDropDownMenu(1, nil, friend, self:GetName(), 0, 0)
+        end
+    })
+
+    createButton({
+        parent = mateFrame,
+        texture = 'Interface\\Addons\\VadeMecum\\images\\del',
+        size = {32,32},
+        point = {"TOPRIGHT", -10, -10},
+        onClick = function() mateFrame:Hide() listFrame:Show() end
+    })
 end
 
 -- +++
@@ -295,12 +416,13 @@ function createButton(params)
     b:SetScript("OnClick", params.onClick)
     if params.texture then 
         b:SetScript('OnEnter', function(self)
-            self:GetNormalTexture():SetVertexColor(1, 1, 1, 0.6)
+            self:GetNormalTexture():SetVertexColor(0, 0.5, 1, 0.6)
             end)
         b:SetScript('OnLeave', function(self)
             self:GetNormalTexture():SetVertexColor(1, 1, 1, 1)
         end)
     end
+    return b
 end
 
 
@@ -332,7 +454,14 @@ function createList()
         items[i].row:SetPoint("TOPLEFT", 0, (i - 1) * -lineHeight)
         items[i].row:SetBackdrop(backDrop)
         items[i].row:SetBackdropColor(0, 0, 0, 0.5)
-        
+
+        items[i].row:EnableMouse(true)
+        items[i].row:SetScript('OnEnter', function(self)
+            self:SetBackdropColor(0,0,1, 0.4)
+        end)
+        items[i].row:SetScript('OnLeave', function(self)
+            self:SetBackdropColor(0,0,0, 0.5)
+        end)
         items[i].zone = items[i].row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         items[i].zone:SetPoint("LEFT", 10, 0)
         items[i].zone:SetText("")
@@ -353,16 +482,21 @@ function createList()
         items[i].coords:SetHeight(lineHeight)
 
         items[i].color = CreateFrame("Frame", nil, items[i].row)
-        items[i].color:SetSize(32,24)
-        items[i].color:SetPoint("RIGHT", -100, 0)
-        items[i].color:SetBackdrop(backDrop)
-        items[i].row:EnableMouse(true)
-        items[i].row:SetScript('OnEnter', function(self)
-            self:SetBackdropColor(0,0,1, 0.4)
-        end)
-        items[i].row:SetScript('OnLeave', function(self)
-            self:SetBackdropColor(0,0,0, 0.5)
-        end)
+        items[i].color:SetSize(16,16)
+        items[i].color:SetPoint("RIGHT", -120, 0)
+        -- items[i].color:SetBackdrop(backDrop)
+        items[i].color:SetBackdrop({
+            bgFile = [[Interface\Addons\VadeMecum\images\star]]
+        })
+
+
+        createButton({
+            parent = items[i].row,
+            texture = 'Interface\\Addons\\VadeMecum\\images\\send',
+            size = {32,16},
+            point = {"RIGHT", -75, 0},
+            onClick = function() setMate(i) end
+        })
 
         createButton({
             parent = items[i].row,
@@ -412,7 +546,7 @@ function createList()
 
     createButton({
         parent = listFrame,
-        texture = 'Interface\\Addons\\VadeMecum\\images\\add',
+        texture = 'Interface\\Addons\\VadeMecum\\images\\plus',
         size = {32,32},
         point = {"TOPLEFT", 10, -10},
         onClick = function() edit(0) end
@@ -420,23 +554,43 @@ function createList()
 
     createButton({
         parent = listFrame,
-        texture = 'Interface\\Addons\\VadeMecum\\images\\close',
+        texture = 'Interface\\Addons\\VadeMecum\\images\\del',
         size = {32,32},
         point = {"TOPRIGHT", -10, -10},
         onClick = function() listFrame:Hide() end
     })
 
-    createButton({
+    local mm = createButton({
         parent = listFrame,
-        texture = 'Interface\\Addons\\VadeMecum\\images\\' .. (VadeMecum_Settings.MiniMap and 'circle-g' or 'circle-y'),
+        texture = 'Interface\\Addons\\VadeMecum\\images\\circle',
         size = {32,32},
         point = {"TOPLEFT", (listFrameWidth / 2) -16, -10},
         onClick = function(self) 
             VadeMecum_Settings.MiniMap = not VadeMecum_Settings.MiniMap
             vm.MiniMap.standby(VadeMecum_Settings.MiniMap)
-            self:SetNormalTexture('Interface\\Addons\\VadeMecum\\images\\' .. (VadeMecum_Settings.MiniMap and 'circle-g' or 'circle-y'))
+            local texture = self:GetNormalTexture()
+            if VadeMecum_Settings.MiniMap then 
+                texture:SetVertexColor(0,0,1,1)
+            else 
+                texture:SetVertexColor(1,1,1,1)
+            end
         end
     })
+    
+    if VadeMecum_Settings.MiniMap then 
+        mm:GetNormalTexture():SetVertexColor(0,0,1,1)
+    else 
+        mm:GetNormalTexture():SetVertexColor(1,1,1,1)
+    end    
+    
+    mm:SetScript('OnLeave', function(self)
+        local texture = self:GetNormalTexture()
+        if VadeMecum_Settings.MiniMap then 
+            texture:SetVertexColor(0,0,1,1)
+        else 
+            texture:SetVertexColor(1,1,1,1)
+        end    
+    end)
 
     listFrame:CreateFontString("VadeMecum_Pages", "OVERLAY", "GameFontNormal"):SetPoint("BOTTOM", -10, 10)
     getPage(currentPage)
@@ -447,5 +601,5 @@ end
 function formatLocation(continent, zone) 
     local continentNames, key, val = { GetMapContinents()} 
     local zoneNames , key, val = { GetMapZones(continent)}
-    return continentNames[continent] .. ', ' .. zoneNames[zone]
+    return (continentNames[continent] and zoneNames[zone]) and (continentNames[continent] .. ', ' .. zoneNames[zone]) or 'wrong location'
 end

@@ -26,5 +26,7 @@ vm.Config = {
         magenta = {1,0,1},
         yellow = {1,1,0},
         white = {1,1,1}
-    }
+    },
+    Fields = {'continent', 'zone', 'posX', 'posY', 'note', 'color'},
+    Separator = '<=>'
 }

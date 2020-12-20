@@ -11,6 +11,14 @@ function event(self, event, ...)
         if (vm.Astrolabe and  vm.Astrolabe.WorldMapVisible) then 
             vm.WorldMap.display()
         end
+    elseif event == 'CHAT_MSG_ADDON' then
+        addonMessage(...)
+    end
+end
+
+function addonMessage(prefix, message, type, sender)
+    if prefix == 'VadeMecum' then
+        vm.Notes.importRequest(message, sender)
     end
 end
 
@@ -34,6 +42,7 @@ function start()
     local main = CreateFrame("Frame", "VadeMecum")
     main:RegisterEvent("ADDON_LOADED")
     main:RegisterEvent("WORLD_MAP_UPDATE")
+    main:RegisterEvent("CHAT_MSG_ADDON")
     main:SetScript("OnEvent", event)
 end 
 
