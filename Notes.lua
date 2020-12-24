@@ -4,7 +4,7 @@ local items = {}
 local listFrame, formFrame, mateFrame
 
 -- local functions 
-local formatLocation, dump, sort, getPage, delete, edit, save, createForm, createList, showOnMap, setMate, pack, unpack, import
+local formatLocation, formatDistance, dump, sort, getPage, delete, edit, save, createForm, createList, showOnMap, setMate, pack, unpack, import
 
 StaticPopupDialogs["VadeMecum_Del_Confirm"] = {
     text = "Delete this note?",
@@ -71,6 +71,10 @@ function getPage(page)
     if (page < 1) or (page > pagesCount) then 
         return
     end 
+
+    local posX, posY = GetPlayerMapPosition("player")
+    local continent = GetCurrentMapContinent()
+    local zone = GetCurrentMapZone()
     for i = 1, rowsPerPage do
         local ii = rowsPerPage * (page - 1) + i
         if ii > notesCount then
@@ -79,7 +83,8 @@ function getPage(page)
             items[i].row:Show()
             items[i].zone:SetText(formatLocation(VadeMecum_Notes[ii].continent, VadeMecum_Notes[ii].zone))
             items[i].coords:SetText(vm.Utils.formatCoords(VadeMecum_Notes[ii].posX, VadeMecum_Notes[ii].posY))
-            items[i].note:SetText(VadeMecum_Notes[ii].note and strsub(VadeMecum_Notes[ii].note, 1 , 100) or '')
+            items[i].note:SetText(VadeMecum_Notes[ii].note and strsub(VadeMecum_Notes[ii].note, 1 , 300) or '')
+            items[i].distance:SetText(formatDistance(continent, zone, posX, posY, VadeMecum_Notes[ii].continent, VadeMecum_Notes[ii].zone, VadeMecum_Notes[ii].posX, VadeMecum_Notes[ii].posY))
             local color = vm.Config.Colors[VadeMecum_Notes[ii].color] or {1,1,1}
             items[i].color:SetBackdropColor(color[1], color[2], color[3],1)
         end
@@ -106,6 +111,7 @@ function edit(index)
         createForm()
     end
     local text, color_slug, ii, posX, posY  = '', 'white', 0, 0, 0
+    local  continent, zone
 
     if index ~= 0 then
         ii = rowsPerPage * (currentPage - 1) + index
@@ -113,8 +119,12 @@ function edit(index)
         color_slug = VadeMecum_Notes[ii].color or 'white'
         posX =  VadeMecum_Notes[ii].posX
         posY =  VadeMecum_Notes[ii].posY
+        continent = VadeMecum_Notes[ii].continent
+        zone = VadeMecum_Notes[ii].zone
     else 
         posX, posY = GetPlayerMapPosition("player")
+        continent = GetCurrentMapContinent()
+        zone = GetCurrentMapZone()
     end
 
     formFrame.posX:SetText(vm.Utils.round(posX * 100, 2))
@@ -124,6 +134,11 @@ function edit(index)
     formFrame.colorI:SetBackdropColor(color[1], color[2], color[3])
     formFrame.note:SetText(text)
     UIDropDownMenu_SetSelectedValue(formFrame.color, color_slug)
+    UIDropDownMenu_SetSelectedValue(formFrame.continent, continent)
+    UIDropDownMenu_SetSelectedValue(formFrame.zone, zone)
+    local cname, zname = formatLocation(continent, zone, 1)
+    VadeMecum_Edit_Continent_Button:SetText(cname)
+    VadeMecum_Edit_Zone_Button:SetText(zname)
     itemEdited = ii
     formFrame:Show()
     listFrame:Hide()
@@ -133,24 +148,22 @@ end
 
 function save(index)
     local posX, posY = GetPlayerMapPosition("player")
-    local color = UIDropDownMenu_GetSelectedValue(formFrame.color) or 'white'
+    posX = vm.Utils.round((tonumber(formFrame.posX:GetText()) or (posX * 100)) / 100, 4)
+    posY = vm.Utils.round((tonumber(formFrame.posY:GetText()) or (posY * 100)) / 100, 4)
+    local rec = {
+        continent = UIDropDownMenu_GetSelectedValue(formFrame.continent) or GetCurrentMapContinent(),
+        zone = UIDropDownMenu_GetSelectedValue(formFrame.zone) or GetCurrentMapZone(),
+        posX = posX,
+        posY = posY,
+        note = formFrame.note:GetText(),
+        color = UIDropDownMenu_GetSelectedValue(formFrame.color) or 'white'
+    }
     if index == 0 then 
-        local rec = {
-            continent = GetCurrentMapContinent(),
-            zone = GetCurrentMapZone(),
-            posX = posX,
-            posY = posY,
-            note = formFrame.note:GetText(),
-            color = color
-        }
         table.insert(VadeMecum_Notes, rec)
-        sort();
     else
-        VadeMecum_Notes[index].posX = vm.Utils.round((tonumber(formFrame.posX:GetText()) or (posX * 100)) / 100, 4)
-        VadeMecum_Notes[index].posY = vm.Utils.round((tonumber(formFrame.posY:GetText()) or (posY * 100)) / 100, 4)
-        VadeMecum_Notes[index].note = formFrame.note:GetText()
-        VadeMecum_Notes[index].color = color
-    end     
+        VadeMecum_Notes[index] = rec
+    end
+    sort();
     formFrame:Hide()
 end
 
@@ -267,6 +280,8 @@ end
 
 -- +++
 
+
+
 function createForm()
     formFrame = CreateFrame("Frame")
     formFrame:Hide();
@@ -276,13 +291,48 @@ function createForm()
         edgeSize = 14,
         insets = {left = 3, right = 3, top = 3, bottom = 3}
     }
-    formFrame:SetSize(300, 400)
-    formFrame:SetPoint("CENTER", 0, 0)
+    formFrame:SetSize(600, 200)
+    formFrame:SetPoint("CENTER", 0, 100)
     formFrame:SetBackdrop(backDrop)
     formFrame:SetBackdropColor(0, 0, 0, 0.8)
-    formFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+    -- formFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+
+-- --- =================================================================================================================================================
     
--- ---
+    local continentNames, key, val = { GetMapContinents() }
+    -- local zoneNames , key, val = { GetMapZones(1)}
+
+    formFrame.continent = createDropdown({
+        name = 'VadeMecum_Edit_Continent',
+        parent = formFrame,
+        text = 'no continent',
+        size = {180, 32},
+        point = {"TOPLEFT",  10 , -10},
+        choices = continentNames,
+        func = function(self)
+            VadeMecum_Edit_Zone_Button:Click()
+        end,
+    })
+
+    formFrame.zone = createDropdown({
+        name = 'VadeMecum_Edit_Zone',
+        parent = formFrame,
+        text = 'no zone1',
+        size = {180, 32},
+        point = {"TOPLEFT",  200 , -10},
+        choices = function()
+            local continent = UIDropDownMenu_GetSelectedValue(VadeMecum_Edit_Continent)
+            local zoneNames
+            if (continent == nil) then
+                zoneNames , key, val = { GetMapZones(2)}
+            else 
+                zoneNames , key, val = { GetMapZones(continent)}
+            end
+            return zoneNames
+        end,
+    })
+        
+-- --- =====================================================================
     
     local slash = formFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     slash:SetText('   /   ')
@@ -293,22 +343,22 @@ function createForm()
         formFrame[v] = CreateFrame("EditBox", nil, formFrame, 'InputBoxTemplate')
         formFrame[v]:SetAutoFocus(false)
         formFrame[v]:SetSize(editWidth, 30)
-        formFrame[v]:SetPoint("TOPLEFT",  10 +  ((k -1 ) * (editWidth + slash:GetWidth()))  , -10)
+        formFrame[v]:SetPoint("TOPLEFT",  400 +  ((k -1 ) * (editWidth + slash:GetWidth()))  , -10)
     end
-    slash:SetPoint('TOPLEFT', 10 + editWidth, -10);
+    slash:SetPoint('TOPLEFT', 400 + editWidth, -10);
 
 -- ---
 
     local cont = CreateFrame("Frame", nil, formFrame)
-    cont:SetSize(formFrame:GetWidth() - 20, 250)
-    cont:SetPoint("TOPLEFT", 10, -60)   
+    cont:SetSize(formFrame:GetWidth() - 20, 80)
+    cont:SetPoint("TOPLEFT", 10, -50)   
     cont:SetBackdrop(backDrop)
     cont:SetBackdropColor(0, 0, 0, 0.5)
 
 -- ---
 
     local scroll = CreateFrame("ScrollFrame", "VadeMecum_Form_Scroll", cont, "UIPanelScrollFrameTemplate")
-    scroll:SetSize(cont:GetWidth() - 40 , 230)
+    scroll:SetSize(cont:GetWidth() - 40 , 60)
     scroll:SetPoint("TOPLEFT", 10, -10)
 
 -- ---
@@ -331,20 +381,19 @@ function createForm()
             VadeMecum_Form_Scroll:SetVerticalScroll(h - hs)
         end
     end)
+
+
     formFrame.note = note
 
 -- ---
 
     local colorF = CreateFrame('Frame', 'VadeMecum_Edit_Color', formFrame, 'UIDropDownMenuTemplate')
     colorF:SetFrameStrata("FULLSCREEN_DIALOG")
-    colorF:Show()
     local function clicked(self)
-        UIDropDownMenu_SetSelectedID(colorF, self:GetID())
         UIDropDownMenu_SetSelectedValue(colorF, self.value)
         local color = vm.Config.Colors[self.value]
         formFrame.colorI:SetBackdropColor(color[1], color[2], color[3])
     end
-
     
     UIDropDownMenu_Initialize(colorF, function(self, level)
         for k, v in pairs(vm.Config.Colors) do
@@ -358,7 +407,7 @@ function createForm()
     end)
 
     local colorI = CreateFrame('Button','VadeMecum_Edit_ColorI', formFrame)
-    colorI:SetPoint("BOTTOMLEFT",  10 , 60)
+    colorI:SetPoint("BOTTOMLEFT",  10 , 40)
     colorI:SetSize(20,20)
     colorI:SetBackdrop({
         bgFile = [[Interface\Buttons\WHITE8x8]],
@@ -370,6 +419,11 @@ function createForm()
         ToggleDropDownMenu(1, nil, colorF, self:GetName(), 0, 0)
     end)
 
+    -- note:Hide()
+    -- scroll:Hide()
+    -- cont:Hide()
+    -- colorI:Hide()
+    -- colorF:Hide()
 
     formFrame.color = colorF
     formFrame.colorI = colorI
@@ -385,7 +439,6 @@ local sb = CreateFrame("Button","VadeMecum_Edit_Save", formFrame, "UIPanelButton
         listFrame:Show()
         getPage(currentPage)
     end)
-
 -- ---
 
 local sb = CreateFrame("Button","VadeMecum_Edit_Close", formFrame, "UIPanelButtonTemplate")
@@ -398,33 +451,9 @@ local sb = CreateFrame("Button","VadeMecum_Edit_Close", formFrame, "UIPanelButto
         listFrame:Show()
         getPage(currentPage)
     end)
-
 end
 
 -- ---
-
-function createButton(params)
-    local b = CreateFrame("Button", params.name, params.parent, params.template)
-    if params.texture then 
-        b:SetNormalTexture(params.texture)
-    end
-    b:SetSize(params.size[1],params.size[2])
-    b:SetPoint(params.point[1], params.point[2], params.point[3])
-    if params.text then
-        b:SetText(params.text)
-    end
-    b:SetScript("OnClick", params.onClick)
-    if params.texture then 
-        b:SetScript('OnEnter', function(self)
-            self:GetNormalTexture():SetVertexColor(0, 0.5, 1, 0.6)
-            end)
-        b:SetScript('OnLeave', function(self)
-            self:GetNormalTexture():SetVertexColor(1, 1, 1, 1)
-        end)
-    end
-    return b
-end
-
 
 function createList()
     listFrame = CreateFrame("Frame")
@@ -435,7 +464,7 @@ function createList()
         edgeSize = 14,
         insets = {left = 3, right = 3, top = 3, bottom = 3}
     }
-    local  listFrameWidth, listFrameHeight = 800, 500
+    local  listFrameWidth, listFrameHeight = 1000, 500
 
     listFrame:SetSize(listFrameWidth, listFrameHeight)
     listFrame:SetPoint("CENTER", 0, 0)
@@ -478,13 +507,18 @@ function createList()
         items[i].note = items[i].row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         items[i].note:SetPoint("LEFT", 300, 0)
         items[i].note:SetText("")
+        items[i].note:SetWidth(300)
+
         items[i].coords:SetWidth(100)
         items[i].coords:SetHeight(lineHeight)
+
+        items[i].distance = items[i].row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        items[i].distance:SetPoint("RIGHT", -180, 0)
+        items[i].distance:SetText("1000")
 
         items[i].color = CreateFrame("Frame", nil, items[i].row)
         items[i].color:SetSize(16,16)
         items[i].color:SetPoint("RIGHT", -120, 0)
-        -- items[i].color:SetBackdrop(backDrop)
         items[i].color:SetBackdrop({
             bgFile = [[Interface\Addons\VadeMecum\images\star]]
         })
@@ -598,8 +632,78 @@ end
 
 -- +++
 
-function formatLocation(continent, zone) 
+function formatLocation(continent, zone, separate) 
     local continentNames, key, val = { GetMapContinents()} 
     local zoneNames , key, val = { GetMapZones(continent)}
-    return (continentNames[continent] and zoneNames[zone]) and (continentNames[continent] .. ', ' .. zoneNames[zone]) or 'wrong location'
+    if (separate == nil) then
+        return (continentNames[continent] and zoneNames[zone]) and (continentNames[continent] .. ', ' .. zoneNames[zone]) or 'wrong location'
+    else 
+        return continentNames[continent], zoneNames[zone]
+    end
+end
+
+-- +++
+
+function formatDistance(c0, z0, x0, y0, c1, z1, x1, y1)
+    if c0 ~= c1 then
+        return 'so far'
+    end
+    return vm.Utils.round(vm.Astrolabe:ComputeDistance(c0, z0, x0, y0, c1, z1, x1, y1) or 0) .. ' m'
+end
+
+-- +++
+
+function createButton(params)
+    local b = CreateFrame("Button", params.name, params.parent, params.template)
+    if params.texture then 
+        b:SetNormalTexture(params.texture)
+    end
+    b:SetSize(params.size[1],params.size[2])
+    b:SetPoint(params.point[1], params.point[2], params.point[3])
+    if params.text then
+        b:SetText(params.text)
+    end
+    b:SetScript("OnClick", params.onClick)
+    if params.texture then 
+        b:SetScript('OnEnter', function(self)
+            self:GetNormalTexture():SetVertexColor(0, 0.5, 1, 0.6)
+            end)
+        b:SetScript('OnLeave', function(self)
+            self:GetNormalTexture():SetVertexColor(1, 1, 1, 1)
+        end)
+    end
+    return b
+end
+
+function createDropdown(params)
+    local dropdown = CreateFrame('Frame', params.name, params.parent, 'UIDropDownMenuTemplate')
+    dropdown:SetFrameStrata("FULLSCREEN_DIALOG")
+    local button =  createButton({
+        parent = params.parent,
+        text = params.text,
+        template = 'UIPanelButtonTemplate',
+        name = params.name .. '_Button',
+        size = params.size,
+        point = params.point,
+        onClick = function(self)
+            ToggleDropDownMenu(1, nil, dropdown, self:GetName(), 0, 0)
+        end
+    })
+    UIDropDownMenu_Initialize(dropdown, function(self, level)
+        local choices  = type(params.choices) == 'function' and params.choices() or params.choices
+        for k, v in pairs(choices) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = v
+            info.value = k
+            info.func = function(self)
+                UIDropDownMenu_SetSelectedValue(dropdown, self.value)
+                button:SetText(self:GetText())
+                if params.func ~= nill then
+                    params.func()
+                end
+            end
+            UIDropDownMenu_AddButton(info, level)
+        end    
+    end)
+    return dropdown
 end
