@@ -69,11 +69,9 @@ function getPage(page)
     local notesCount = getn(VadeMecum_Notes) 
     pagesCount = ceil(notesCount / rowsPerPage)
     pagesCount = pagesCount == 0 and 1 or pagesCount
-    print(1)
     if (page < 1) or (page > pagesCount) then 
         return
     end 
-    print(2)
     SetMapToCurrentZone()
     local posX, posY = GetPlayerMapPosition("player")
     local continent = GetCurrentMapContinent()
