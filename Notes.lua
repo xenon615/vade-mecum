@@ -30,6 +30,7 @@ vm.Notes = {
             createList()
         end
         listFrame:Show()
+        getPage(currentPage)
     end,
     importRequest = function(message, sender)
         StaticPopupDialogs["VadeMecum_Import_Confirm"].text = 'Note from ' .. sender .. ' received'
@@ -68,10 +69,12 @@ function getPage(page)
     local notesCount = getn(VadeMecum_Notes) 
     pagesCount = ceil(notesCount / rowsPerPage)
     pagesCount = pagesCount == 0 and 1 or pagesCount
+    print(1)
     if (page < 1) or (page > pagesCount) then 
         return
     end 
-
+    print(2)
+    SetMapToCurrentZone()
     local posX, posY = GetPlayerMapPosition("player")
     local continent = GetCurrentMapContinent()
     local zone = GetCurrentMapZone()
@@ -84,7 +87,9 @@ function getPage(page)
             items[i].zone:SetText(formatLocation(VadeMecum_Notes[ii].continent, VadeMecum_Notes[ii].zone))
             items[i].coords:SetText(vm.Utils.formatCoords(VadeMecum_Notes[ii].posX, VadeMecum_Notes[ii].posY))
             items[i].note:SetText(VadeMecum_Notes[ii].note and strsub(VadeMecum_Notes[ii].note, 1 , 300) or '')
-            items[i].distance:SetText(formatDistance(continent, zone, posX, posY, VadeMecum_Notes[ii].continent, VadeMecum_Notes[ii].zone, VadeMecum_Notes[ii].posX, VadeMecum_Notes[ii].posY))
+            items[i].distance:SetText(formatDistance(
+                continent, zone, posX, posY, 
+                VadeMecum_Notes[ii].continent, VadeMecum_Notes[ii].zone, VadeMecum_Notes[ii].posX, VadeMecum_Notes[ii].posY))
             local color = vm.Config.Colors[VadeMecum_Notes[ii].color] or {1,1,1}
             items[i].color:SetBackdropColor(color[1], color[2], color[3],1)
         end
@@ -627,7 +632,6 @@ function createList()
     end)
 
     listFrame:CreateFontString("VadeMecum_Pages", "OVERLAY", "GameFontNormal"):SetPoint("BOTTOM", -10, 10)
-    getPage(currentPage)
 end
 
 -- +++
