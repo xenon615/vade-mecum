@@ -23,8 +23,13 @@ function addonMessage(prefix, message, type, sender)
 end
 
 function init () 
-    SlashCmdList["VADEMECUM"] = function()  
-        vm.Notes.display()
+    SlashCmdList["VADEMECUM"] = function(msg)
+        if msg == '' then 
+            vm.Notes.display()
+        elseif msg == 'assist' then
+            vm.Assistant.go()
+        end
+        
     end
     SLASH_VADEMECUM1 = '/vm' 
     VadeMecum_Notes = VadeMecum_Notes or {}

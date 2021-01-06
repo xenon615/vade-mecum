@@ -29,8 +29,12 @@ vm.Notes = {
         if listFrame == nil then
             createList()
         end
-        listFrame:Show()
-        getPage(currentPage)
+        if listFrame:IsVisible() then 
+            listFrame:Hide()
+        else 
+            listFrame:Show()
+            getPage(currentPage)
+        end
     end,
     importRequest = function(message, sender)
         StaticPopupDialogs["VadeMecum_Import_Confirm"].text = 'Note from ' .. sender .. ' received'
@@ -42,6 +46,13 @@ vm.Notes = {
             end
         end	
         StaticPopup_Show('VadeMecum_Import_Confirm')
+    end,
+    add = function()
+        local coords = vm.Utils.cursorMapPosition()
+        if coords.c ~= 0 then
+            ToggleFrame(WorldMapFrame)
+            edit(0, coords)
+        end
     end
 }
 
@@ -109,7 +120,7 @@ end
 
 -- +++
 
-function edit(index)
+function edit(index, coords)
     if formFrame == nil then
         createForm()
     end
@@ -125,13 +136,20 @@ function edit(index)
         continent = VadeMecum_Notes[ii].continent
         zone = VadeMecum_Notes[ii].zone
     else 
-        posX, posY = GetPlayerMapPosition("player")
-        continent = GetCurrentMapContinent()
-        zone = GetCurrentMapZone()
+        if coords == nil then
+            posX, posY = GetPlayerMapPosition("player")
+            continent = GetCurrentMapContinent()
+            zone = GetCurrentMapZone()
+        else 
+            posX = coords.x
+            posY = coords.y
+            continent = coords.c
+            zone = coords.z            
+        end
     end
 
-    formFrame.posX:SetText(vm.Utils.round(posX * 100, 2))
-    formFrame.posY:SetText(vm.Utils.round(posY * 100, 2))
+    formFrame.posX:SetText(vm.Utils.round(posX * 100, 4))
+    formFrame.posY:SetText(vm.Utils.round(posY * 100, 4))
 
     local color = vm.Config.Colors[color_slug]
     formFrame.colorI:SetBackdropColor(color[1], color[2], color[3])
@@ -144,15 +162,17 @@ function edit(index)
     VadeMecum_Edit_Zone_Button:SetText(zname)
     itemEdited = ii
     formFrame:Show()
-    listFrame:Hide()
+    if listFrame ~= nil and listFrame:IsVisible() then 
+        listFrame:Hide()
+    end
 end
 
 -- +++
 
 function save(index)
     local posX, posY = GetPlayerMapPosition("player")
-    posX = vm.Utils.round((tonumber(formFrame.posX:GetText()) or (posX * 100)) / 100, 4)
-    posY = vm.Utils.round((tonumber(formFrame.posY:GetText()) or (posY * 100)) / 100, 4)
+    posX = vm.Utils.round((tonumber(formFrame.posX:GetText()) or (posX * 100)) / 100, 6)
+    posY = vm.Utils.round((tonumber(formFrame.posY:GetText()) or (posY * 100)) / 100, 6)
     local rec = {
         continent = UIDropDownMenu_GetSelectedValue(formFrame.continent) or GetCurrentMapContinent(),
         zone = UIDropDownMenu_GetSelectedValue(formFrame.zone) or GetCurrentMapZone(),
@@ -283,8 +303,6 @@ end
 
 -- +++
 
-
-
 function createForm()
     formFrame = CreateFrame("Frame")
     formFrame:Hide();
@@ -303,7 +321,6 @@ function createForm()
 -- --- =================================================================================================================================================
     
     local continentNames, key, val = { GetMapContinents() }
-    -- local zoneNames , key, val = { GetMapZones(1)}
 
     formFrame.continent = createDropdown({
         name = 'VadeMecum_Edit_Continent',
@@ -421,13 +438,6 @@ function createForm()
     colorI:SetScript('OnClick', function(self, button, down) 
         ToggleDropDownMenu(1, nil, colorF, self:GetName(), 0, 0)
     end)
-
-    -- note:Hide()
-    -- scroll:Hide()
-    -- cont:Hide()
-    -- colorI:Hide()
-    -- colorF:Hide()
-
     formFrame.color = colorF
     formFrame.colorI = colorI
 -- ---
@@ -439,8 +449,10 @@ local sb = CreateFrame("Button","VadeMecum_Edit_Save", formFrame, "UIPanelButton
     sb:SetText("Save")
     sb:SetScript("OnClick", function()
         save(itemEdited)
-        listFrame:Show()
-        getPage(currentPage)
+        if listFrame ~= nil then
+            listFrame:Show()
+            getPage(currentPage)
+        end
     end)
 -- ---
 
@@ -450,8 +462,10 @@ local sb = CreateFrame("Button","VadeMecum_Edit_Close", formFrame, "UIPanelButto
     sb:SetPoint("BOTTOMLEFT", 10, 10)
     sb:SetText("Close")
     sb:SetScript("OnClick", function()
-        formFrame:Hide()
-        listFrame:Show()
+        if listFrame ~= nil then
+            formFrame:Hide()
+            listFrame:Show()
+        end
         getPage(currentPage)
     end)
 end
@@ -468,7 +482,12 @@ function createList()
         insets = {left = 3, right = 3, top = 3, bottom = 3}
     }
     local  listFrameWidth, listFrameHeight = 1000, 500
-
+    listFrame:EnableKeyboard(true)
+    listFrame:SetScript('OnKeyUp', function(self, key)
+        if (key == 'ESCAPE') and self:IsVisible() then
+            self:Hide()
+        end
+    end)
     listFrame:SetSize(listFrameWidth, listFrameHeight)
     listFrame:SetPoint("CENTER", 0, 0)
     listFrame:SetBackdrop(backDrop)
@@ -586,6 +605,7 @@ function createList()
         texture = 'Interface\\Addons\\VadeMecum\\images\\plus',
         size = {32,32},
         point = {"TOPLEFT", 10, -10},
+        tooltip = 'Add new note',
         onClick = function() edit(0) end
     })
 
@@ -594,6 +614,7 @@ function createList()
         texture = 'Interface\\Addons\\VadeMecum\\images\\del',
         size = {32,32},
         point = {"TOPRIGHT", -10, -10},
+        tooltip = 'Close',
         onClick = function() listFrame:Hide() end
     })
 
@@ -602,6 +623,7 @@ function createList()
         texture = 'Interface\\Addons\\VadeMecum\\images\\circle',
         size = {32,32},
         point = {"TOPLEFT", (listFrameWidth / 2) -16, -10},
+        tooltip = 'Toggle minimap',
         onClick = function(self) 
             VadeMecum_Settings.MiniMap = not VadeMecum_Settings.MiniMap
             vm.MiniMap.standby(VadeMecum_Settings.MiniMap)
@@ -628,7 +650,6 @@ function createList()
             texture:SetVertexColor(1,1,1,1)
         end    
     end)
-
     listFrame:CreateFontString("VadeMecum_Pages", "OVERLAY", "GameFontNormal"):SetPoint("BOTTOM", -10, 10)
 end
 
@@ -669,9 +690,17 @@ function createButton(params)
     if params.texture then 
         b:SetScript('OnEnter', function(self)
             self:GetNormalTexture():SetVertexColor(0, 0.5, 1, 0.6)
-            end)
+            if params.tooltip ~= nil then
+                GameTooltip:SetOwner(self)
+                GameTooltip:AddLine(params.tooltip)
+                GameTooltip:Show()
+            end                
+        end)
         b:SetScript('OnLeave', function(self)
             self:GetNormalTexture():SetVertexColor(1, 1, 1, 1)
+            if params.tooltip ~= nil then
+                GameTooltip:Hide()
+            end
         end)
     end
     return b

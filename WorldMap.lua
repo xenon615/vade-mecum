@@ -58,6 +58,13 @@ function getMarker(index)
     if marker == nil then
         if  overlayFrame == nil then
             overlayFrame = CreateFrame("Frame", nil, VadeMecumMapOverlayParent, "VadeMecumrMapOverlayTemplate")
+            overlayFrame:EnableKeyboard(true)
+
+            overlayFrame:SetScript('OnKeyUp', function(this, key)
+                if (key == 'N') and IsShiftKeyDown() then
+                    vm.Notes.add()
+                end
+            end)
         end
         marker = CreateFrame("Button" , nil, overlayFrame, "VadeMecumrMarkerTemplate")
         marker:SetID(index)

@@ -13,8 +13,6 @@ vm.Utils = {
         end
     end,
     formatCoords = function(x, y)
-        -- return format("%1.1f", vm.Utils.round(x * 1000) / 10) .. "/" .. format("%1.1f", vm.Utils.round(y * 1000) / 10)
-        -- return format("%1.1f", vm.Utils.round(x * 100, 2) ) .. "/" .. format("%1.1f", vm.Utils.round(y * 100))
         return vm.Utils.round(x * 100, 2) .. " / " .. vm.Utils.round(y * 100, 2)
     end,
     round = function(float, digits)
@@ -28,7 +26,25 @@ vm.Utils = {
         tooltip:AddLine(line)
         tooltip:SetFrameLevel(tooltip:GetParent():GetFrameLevel() + 1)
         tooltip:Show()
+    end,
+    cursorMapPosition = function()  -- stolen from MapCoords
+        local c = GetCurrentMapContinent()
+        if c < 1  then 
+            return {c = 0, z = 0, x = 0, y = 0}
+        end   
+        local scale = WorldMapDetailFrame:GetEffectiveScale()
+		local width = WorldMapDetailFrame:GetWidth()
+		local height = WorldMapDetailFrame:GetHeight()
+		local centerX, centerY = WorldMapDetailFrame:GetCenter()
+		local x, y = GetCursorPosition()
+		local adjustedX = (x / scale - (centerX - (width/2))) / width
+        local adjustedY = (centerY + (height/2) - y / scale) / height
+        local z = GetCurrentMapZone()
+        if z == 0 then 
+            ProcessMapClick(adjustedX, adjustedY)
+            z = GetCurrentMapZone()
+        end
+        return {c = c, z = z, x = adjustedX, y = adjustedY}
     end
-    
 }
 
