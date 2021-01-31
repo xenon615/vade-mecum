@@ -28,6 +28,10 @@ function init ()
             vm.Notes.display()
         elseif msg == 'assist' then
             vm.Assistant.go()
+    elseif msg == 'assist next' then 
+            vm.Assistant.next()
+        elseif msg == 'debug' then
+            print(GetCursorPosition())
         end
         
     end
@@ -50,8 +54,6 @@ function start()
     main:RegisterEvent("CHAT_MSG_ADDON")
     main:SetScript("OnEvent", event)
 end 
-
-
 start();
 
 

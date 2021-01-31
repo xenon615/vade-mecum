@@ -11,14 +11,23 @@ local $feather_color = 0x000000
 local $Paused = False
 $dll = DllOpen("user32.dll")
 
-;~  ---
+;~  ---------------------------------------
+
+
+;~ $bobber_tolerance = 15
+;~ $splash_tolerance = 45
+
+$bobber_tolerance = 5
+$splash_tolerance = 15
+
+;~  ----------------------------------------
 
 HotKeySet("{F11}", "Pause")
 HotKeySet("{F10}", "Kill")
 
-
-pole()
-
+While(True)
+    pole()  
+WEnd
 ;~ ---
 
 Func Pause()
@@ -68,7 +77,7 @@ Func find()
     local $y1 = $clientSize[1] - 300
     local $color_index = 0
     While TimerDiff($start_time) < $wait_time
-        local $pos = PixelSearch($x0, $y0, $x1, $y1, $bobber_colors[$color_index], 5 , 2)    
+        local $pos = PixelSearch($x0, $y0, $x1, $y1, $bobber_colors[$color_index], $bobber_tolerance , 2)    
         If not @error Then
             ToolTip('found' & $color_index, 100, 100)
             MouseMove($pos[0], $pos[1])
@@ -95,7 +104,7 @@ Func splash($mouseX, $mouseY)
     $x1  = $mouseX + 100
     $y1 = $mouseY + 100
     $splash_color = 0xF6F6F6
-    $splash_tolerance = 25
+
     $splash_search_step = 2
     while TimerDiff($start_time) < $wait_time
         $pos = PixelSearch($x0, $y0, $x1, $y1, $splash_color, $splash_tolerance, $splash_search_step)
