@@ -47,11 +47,6 @@ For $i = 0 To 4
     Sleep(2000)
 Next
 
-
-
-
-
-
 getData()
 Go()
 

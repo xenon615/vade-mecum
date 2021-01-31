@@ -72,24 +72,24 @@ function createTransmitter()
     -- t:SetSize(gFrame:GetWidth(), 100)
     -- t:SetPoint('TOPLEFT', 0, 0)
     -- t:SetTexture(1,0,0,1)
-    -- gems = {}
-    -- for i = 1, gCount do
-    --     gems[i] = CreateFrame('Frame', nil, gFrame)
-    --     gems[i]:SetSize(dim, dim)
-    --     gems[i]:SetPoint('TOPLEFT', (i - 1) * (dim), 0)
-
-    --     gems[i]:SetBackdrop({
-    --         bgFile =  [[Interface\Buttons\WHITE8x8]]    
-    --     })
-    --     gems[i]:Show()
-    -- end
     gems = {}
     for i = 1, gCount do
-        gems[i] = gFrame:CreateTexture()
+        gems[i] = CreateFrame('Frame', nil, gFrame)
         gems[i]:SetSize(dim, dim)
         gems[i]:SetPoint('TOPLEFT', (i - 1) * (dim), 0)
+
+        gems[i]:SetBackdrop({
+            bgFile =  [[Interface\Buttons\WHITE8x8]]    
+        })
         gems[i]:Show()
     end
+    -- gems = {}
+    -- for i = 1, gCount do
+    --     gems[i] = gFrame:CreateTexture()
+    --     gems[i]:SetSize(dim, dim)
+    --     gems[i]:SetPoint('TOPLEFT', (i - 1) * (dim), 0)
+    --     gems[i]:Show()
+    -- end
     gFrame:SetScript("OnUpdate", update)
 end
 
@@ -101,25 +101,25 @@ function colorise()
     local pitch = GetUnitPitch('player')
     local x1, x2 = math.modf(x * 255)
     local y1, y2 = math.modf(y * 255)
-    -- gems[1]:SetBackdropColor(x1 / 255, x2, azimuth / 7)
-    -- gems[2]:SetBackdropColor(y1 / 255, y2, pitch / 4 + 0.5)
-    -- gems[3]:SetBackdropColor((turn == 1 and 0.8 or 0) + (IsFalling() and 0.2 or 0), (IsMounted() and 0.8 or 0) + (IsFlying() and 0.2 or 0),  (UnitAffectingCombat("player") and 0.8 or 0) + (UnitExists("target") and 0.2 or 0))
-    -- if nodes[nodeIdx] ~= nil then 
-    --     x1, x2 = math.modf(nodes[nodeIdx][1] * 255)
-    --     y1, y2 = math.modf(nodes[nodeIdx][2] * 255)
-    --     gems[4]:SetBackdropColor(x1 / 255, x2, 0)
-    --     gems[5]:SetBackdropColor(y1 / 255, y2, 0)
-    -- end
-    -- print(azimuth  * 180 / 3.14)
-    gems[1]:SetTexture(x1 / 255, x2, azimuth / 7)
-    gems[2]:SetTexture(y1 / 255, y2, pitch / 4 + 0.5)
-    gems[3]:SetTexture((turn == 1 and 0.8 or 0) + (IsFalling() and 0.2 or 0), (IsMounted() and 0.8 or 0) + (IsFlying() and 0.2 or 0),  (UnitAffectingCombat("player") and 0.8 or 0) + (UnitExists("target") and 0.2 or 0))
+    gems[1]:SetBackdropColor(x1 / 255, x2, azimuth / 7)
+    gems[2]:SetBackdropColor(y1 / 255, y2, pitch / 4 + 0.5)
+    gems[3]:SetBackdropColor((turn == 1 and 0.8 or 0) + (IsFalling() and 0.2 or 0), (IsMounted() and 0.8 or 0) + (IsFlying() and 0.2 or 0),  (UnitAffectingCombat("player") and 0.8 or 0) + (UnitExists("target") and 0.2 or 0))
     if nodes[nodeIdx] ~= nil then 
         x1, x2 = math.modf(nodes[nodeIdx][1] * 255)
         y1, y2 = math.modf(nodes[nodeIdx][2] * 255)
-        gems[4]:SetTexture(x1 / 255, x2, 0)
-        gems[5]:SetTexture(y1 / 255, y2, 0)
+        gems[4]:SetBackdropColor(x1 / 255, x2, 0)
+        gems[5]:SetBackdropColor(y1 / 255, y2, 0)
     end
+    -- print(azimuth  * 180 / 3.14)
+    -- gems[1]:SetTexture(x1 / 255, x2, azimuth / 7)
+    -- gems[2]:SetTexture(y1 / 255, y2, pitch / 4 + 0.5)
+    -- gems[3]:SetTexture((turn == 1 and 0.8 or 0) + (IsFalling() and 0.2 or 0), (IsMounted() and 0.8 or 0) + (IsFlying() and 0.2 or 0),  (UnitAffectingCombat("player") and 0.8 or 0) + (UnitExists("target") and 0.2 or 0))
+    -- if nodes[nodeIdx] ~= nil then 
+    --     x1, x2 = math.modf(nodes[nodeIdx][1] * 255)
+    --     y1, y2 = math.modf(nodes[nodeIdx][2] * 255)
+    --     gems[4]:SetTexture(x1 / 255, x2, 0)
+    --     gems[5]:SetTexture(y1 / 255, y2, 0)
+    -- end
     
 end
 
