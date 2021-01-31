@@ -43,8 +43,8 @@ local $indicators[5]
 $indSize = 10 * $sizeQ
 For $i = 0 To 4
     $indicators[$i] = $indSize * ($i + 0.5)
-    ;~ MouseMove($indicators[$i], 5)
-    ;~ Sleep(2000)
+    MouseMove($indicators[$i], 5)
+    Sleep(2000)
 Next
 
 
