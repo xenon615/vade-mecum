@@ -40,10 +40,10 @@ local $miniMapCenter[2] = [1287 * $heightRatio, (768 - 689) * $heightRatio]
 ;~ Sleep(5000)
 ;~ Exit
 local $indicators[5]
-$indSize = 10 * $sizeQ
+$indSize = 20 * $sizeQ
 For $i = 0 To 4
     $indicators[$i] = $indSize * ($i + 0.5)
-    MouseMove($indicators[$i], 5)
+    MouseMove($indicators[$i], 10)
     Sleep(2000)
 Next
 

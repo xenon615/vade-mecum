@@ -62,7 +62,7 @@ end
 
 function createTransmitter()
     print('create tr')
-    local dim = 10
+    local dim = 20
     local gCount = 5
     gFrame = CreateFrame('Frame', nil, UIParent)
     gFrame:SetPoint('TOPLEFT', 0, 0)
