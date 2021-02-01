@@ -334,7 +334,7 @@ Func Running()
     EndIf
     local $range = getRange()
 
-    debug('pitch ' & Round($pitch, 4)  & ' Running to ' & Round($target[0], 4) & ' / ' & Round($target[1], 4) & ' devSin ' & Round($devSin, 4) & ' range '  & Round($range, 2))
+    ;~ debug('pitch ' & Round($pitch, 4)  & ' Running to ' & Round($target[0], 4) & ' / ' & Round($target[1], 4) & ' devSin ' & Round($devSin, 4) & ' range '  & Round($range, 2))
 
     If ( $range < $errorD) Then
         return exitState()
@@ -390,7 +390,7 @@ Func Walking()
     EndIf
     local $range = getRange()
 
-    debug('pitch ' & Round($pitch, 4)  & ' Walking to ' & Round($target[0], 4) & ' / ' & Round($target[1], 4) & ' devSin ' & Round($devSin, 4) & ' range '  & Round($range, 4))
+    ;~ debug('pitch ' & Round($pitch, 4)  & ' Walking to ' & Round($target[0], 4) & ' / ' & Round($target[1], 4) & ' devSin ' & Round($devSin, 4) & ' range '  & Round($range, 4))
 
     If ( $range < ($errorD / 10)) Then
         return exitState()
@@ -464,7 +464,7 @@ Func getData()
     $isFlying = ($rgb[1] == 51) or  ($rgb[1] == 255)  ? True : False
     $inCombat = $rgb[2] >= 204 ? True : False
     $hasTarget = ($rgb[2] == 51) or  ($rgb[2] == 255)  ? True : False
-    ;~ debug('mounted ' & $isMounted & '       flying ' & $isFlying & '          combat ' & $inCombat & '           target '  & $hasTarget & '          turn ' &  $turn)
+    debug('mounted ' & $isMounted & '       flying ' & $isFlying & '          combat ' & $inCombat & '           target '  & $hasTarget & '          turn ' &  $turn)
 EndFunc
 
 ;~  ---
