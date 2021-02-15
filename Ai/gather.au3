@@ -118,7 +118,7 @@ Func Test()
     stay()
     Sleep(1000)
 
-    ;~ debug('mounted ' & $isMounted & '  flying ' & $isFlying & '  combat ' & $inCombat & '  target '  & $hasTarget & '  turn ' &  $turn)
+    debug('mounted ' & $isMounted & '  flying ' & $isFlying & '  combat ' & $inCombat & '  target '  & $hasTarget & '  turn ' &  $turn)
     Beep()
     For $i = 0 To 4
         MouseMove($indicators[$i], 10)
