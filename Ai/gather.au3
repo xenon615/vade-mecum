@@ -29,7 +29,7 @@ $centerY = Floor($clientSize[1] / 2)
 MouseMove($centerX, $centerY)
 $errorA = 0.01
 $errorD = 0.001
-local $indicators[5]
+local $indicators[6]
 local $fullColor = 0xE7B003
 local $cursorColor[2] = ['FF241A10', 'FF6C5235']
 local $heightRatio = $clientSize[1] / 768
@@ -93,8 +93,8 @@ Func Setup()
     $rgb = _ColorGetRGB(PixelGetColor(1,1 , $hwnd))
     ;~ _ArrayDisplay($rgb, "", Default, 8)
     $scale = Round($rgb[0] / 255, 2)
-    $mmx = Round($rgb[1] * 1300 / 255)
-    $mmy = Round($rgb[2] * 768 / 255 )
+    $mmx = Round($rgb[1] * 2000 / 255)
+    $mmy = Round($rgb[2] * 1000 / 255 )
     ;~ debug($scale & '    ' & $mmx & '  ' & $mmy )
     Sleep(2000)
     
@@ -103,7 +103,7 @@ Func Setup()
     $miniMapCenter[1] =  (768 - $mmy) * $heightRatio
 
     $indSize = 20 * $sizeQ
-    For $i = 0 To 4
+    For $i = 0 To 5
         $indicators[$i] = $indSize * ($i + 0.5)
     Next
     ;~ _ArrayDisplay($indicators, "", Default, 8)
@@ -118,9 +118,9 @@ Func Test()
     stay()
     Sleep(1000)
 
-    debug('mounted ' & $isMounted & '  flying ' & $isFlying & '  combat ' & $inCombat & '  target '  & $hasTarget & '  turn ' &  $turn)
+    ;~ debug('mounted ' & $isMounted & '  flying ' & $isFlying & '  combat ' & $inCombat & '  target '  & $hasTarget & '  turn ' &  $turn)
     Beep()
-    For $i = 0 To 4
+    For $i = 0 To 5
         MouseMove($indicators[$i], 10)
         Sleep(2000)
     Next
@@ -150,18 +150,13 @@ EndFunc
 Func setTarget()
     Beep(300, 200)
     Send('3')
-    Sleep(2000)
+    ;~ Sleep(10000)
+    ;~ $rgb = _ColorGetRGB(PixelGetColor($indicators[4], 5, $hwnd))
+    ;~ $target[0] = ($rgb[0] + $rgb[1] / 255) / 255
 
-    $color4 = PixelGetColor($indicators[3], 5, $hwnd)
-    $color5 = PixelGetColor($indicators[4], 5, $hwnd)
-
-    $rgb = _ColorGetRGB($color4)
-    $target[0] = ($rgb[0] + $rgb[1] / 255) / 255
-
-    $rgb = _ColorGetRGB($color5)
-    $target[1] = ($rgb[0] + $rgb[1] / 255) / 255
+    ;~ $rgb = _ColorGetRGB(PixelGetColor($indicators[5], 5, $hwnd))
+    ;~ $target[1] = ($rgb[0] + $rgb[1] / 255) / 255
     $detected = False
-
 EndFunc 
 
 ;~  ---
@@ -197,7 +192,7 @@ Func enterState($s)
             Beep(300)
             Beep(900)
             MouseDown($MOUSE_CLICK_RIGHT)
-            $backTo = $faceTo <= $PI ? $faceTo + $PI *  0.75 : $faceTo - $PI * 0.75
+            $backTo = $faceTo <= $PI ? $faceTo + $PI *  0.95 : $faceTo - $PI * 0.95
             debug ('enter back  face '  & ' ' &  $faceTo  &  '  back '  & $backTo)
     EndSwitch
     $state = $s
@@ -248,7 +243,7 @@ Func exitState($new = '')
         Case 'Back'
                 Send('{w down}')
                 Send('{SPACE down}')
-                Sleep(2000)
+                Sleep(5000)
                 Send('{w up}')
                 Send('{SPACE up}')
                 enterState('Running')
@@ -258,13 +253,11 @@ EndFunc
 ;~  ---
 
 Func Idle()
+    debug('mounted ' & $isMounted & '  flying ' & $isFlying & '  combat ' & $inCombat & '  target '  & $hasTarget & '  turn ' &  $turn)
     if ($inCombat) Then
         return exitState()
     EndIf
 EndFunc
-
-;~  ---
-
 
 ;~  ---
 
@@ -273,7 +266,6 @@ Func Falling()
         return enterState($prevState)
     EndIf
 EndFunc
-
 
 ;~  ---
 
@@ -286,16 +278,9 @@ Func Combat()
     Send('2')
     Sleep(2500)
     if ($turn) Then
-        ;~ Local $a = $faceTo <= $PI ? $faceTo + $PI *  0.9 : $faceTo - $PI * 0.9
-        ;~ if (not _IsPressed("02", $dll)) Then
-        ;~     MouseDown($MOUSE_CLICK_RIGHT)
-        ;~ EndIf
-        ;~ Turn(sin($faceTo - $a), 200)
-        ;~ MouseUp($MOUSE_CLICK_RIGHT)
         Send('{d down}')
         Sleep(500)
         Send('{d up}')
-        Sleep(1000)
     EndIf
     if(not $inCombat) Then
         return exitState()
@@ -310,7 +295,7 @@ Func Work()
         return  exitState()        
     EndIf
 
-    if (TimerDiff($enter_state_time) > 2000) Then
+    if (TimerDiff($enter_state_time) > 3000) Then
         return exitState()
     EndIf
 
@@ -345,6 +330,9 @@ EndFunc
 
 Func Landing()
     if (TimerDiff($enter_state_time) > 30000) Then
+        Send('{SPACE down}')
+        Sleep(1000)
+        Send('{SPACE up}')
         return enterState('Running')
     EndIf
     if (not $isFlying) Then 
@@ -390,7 +378,7 @@ Func Running()
             MouseDown($MOUSE_CLICK_RIGHT)
         EndIf
         Level($elSin)
-        if (abs($elSin) > 0.1) Then
+        if (abs($elSin) > 0.5) Then
             return
         EndIf    
     EndIf
@@ -528,18 +516,6 @@ EndFunc
 
 ;~  ---
 
-;~ Func atan2($y, $x)
-;~     Return (2 * ATan($y / ($x + Sqrt($x * $x + $y * $y))))
-;~ EndFunc                   
-
-;~ ;~  ---
-
-;~ Func direction()
-;~     Local $a = atan2($target[0] - $x,  $target[1] - $y)
-;~     return $a < $PI  ? $a + $PI : $a
-;~ EndFunc
-
-
 Func direction()
     $dx = $target[0] - $x 
     $dy = $target[1] - $y
@@ -565,32 +541,35 @@ EndFunc
 ;~  ---
 
 Func getData()
-    $color1 = PixelGetColor($indicators[0], 5, $hwnd)
-    $color2 = PixelGetColor($indicators[1], 5, $hwnd)
-    $color3 = PixelGetColor($indicators[2], 5, $hwnd)
     if @error Then
         Exit 1
     EndIf
-    $rgb = _ColorGetRGB($color1)
+    $rgb = _ColorGetRGB(PixelGetColor($indicators[0], 5, $hwnd))
     if ($rgb[0] == 0) and ($rgb[1] == 0) and ($rgb[2] == 0) Then
         return setTarget()
     EndIf
     $x = ($rgb[0] + $rgb[1] / 255) / 255
     $faceTo = ($rgb[2] / 255) * 7
-
-    $rgb = _ColorGetRGB($color2)
+    
+    $rgb = _ColorGetRGB(PixelGetColor($indicators[1], 5, $hwnd))
     $y = ($rgb[0] + $rgb[1] / 255) / 255
     $pitch = (($rgb[2] / 255) - 0.5) * 4
     
-    $rgb = _ColorGetRGB($color3)
-    ;~ $turn =  $rgb[0] == 0 ? False : True
-    $turn = $rgb[0] >= 204 ? True : False
-    $isFalling = ($rgb[0] == 51) or  ($rgb[0] == 255)  ? True : False
-    $isMounted = $rgb[1] >= 204 ? True : False
-    $isFlying = ($rgb[1] == 51) or  ($rgb[1] == 255)  ? True : False
-    $inCombat = $rgb[2] >= 204 ? True : False
-    $hasTarget = ($rgb[2] == 51) or  ($rgb[2] == 255)  ? True : False
-   
+    $rgb = _ColorGetRGB(PixelGetColor($indicators[2], 5, $hwnd))
+    $isMounted = $rgb[0] == 0 ? False : True
+    $isFlying = $rgb[1] == 0 ? False : True 
+    $isFalling = $rgb[2] == 0 ? False : True
+    
+    $rgb = _ColorGetRGB(PixelGetColor($indicators[3], 5, $hwnd))
+    $inCombat = $rgb[0] == 0 ? False : True
+    $hasTarget = $rgb[1] == 0 ? False : True 
+    $turn = $rgb[2] == 0 ? False : True
+
+    $rgb = _ColorGetRGB(PixelGetColor($indicators[4], 5, $hwnd))
+    $target[0] = ($rgb[0] + $rgb[1] / 255) / 255
+
+    $rgb = _ColorGetRGB(PixelGetColor($indicators[5], 5, $hwnd))
+    $target[1] = ($rgb[0] + $rgb[1] / 255) / 255
 EndFunc
 
 ;~  ---
@@ -610,9 +589,9 @@ EndFunc
 Func Level($sin)
     local $mouseX = MouseGetPos(0)
     local $mouseY = MouseGetPos(1)
-    if (abs($mouseY -  $centerY ) > 200 ) Then
-        MouseMove($centerX, $centerY)
-    EndIf
+    ;~ if (abs($mouseY -  $centerY ) > 200 ) Then
+    ;~     MouseMove($centerX, $centerY)
+    ;~ EndIf
     MouseMove($mouseX, $mouseY + 10 * $sin, 0)
     ;~ Sleep(1000)
 EndFunc

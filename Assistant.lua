@@ -29,13 +29,13 @@ vm.Assistant = {
             createTransmitter()
         end
         regScripts(false)
-        local scale = vm.Utils.round(UIParent:GetEffectiveScale(), 2)
+        local scale = vm.Utils.round(UIParent:GetEffectiveScale(), 4)
         print(scale)
         
         local mmw = Minimap:GetWidth() / 2 
         local mmx, mmy = vm.Utils.round(scale * (Minimap:GetLeft() + mmw)), vm.Utils.round(scale * (Minimap:GetTop() - mmw))
         print(mmx, mmy)
-        gems[1]:SetTexture(scale, mmx / 1300 , mmy/ 768)
+        gems[1]:SetTexture(scale, mmx / 2000 , mmy / 1000)
     end
 
 }
@@ -84,7 +84,7 @@ end
 function createTransmitter()
     print('create tr')
     local dim = 20
-    local gCount = 5
+    local gCount = 6
     gFrame = CreateFrame('Frame', nil, UIParent)
     gFrame:SetPoint('TOPLEFT', 0, 0)
     gFrame:SetSize(gCount * dim, dim)
@@ -96,7 +96,6 @@ function createTransmitter()
         gems[i]:SetPoint('TOPLEFT', (i - 1) * (dim), 0)
         gems[i]:Show()
     end
-    
 end
 
 function colorise()
@@ -114,12 +113,15 @@ function colorise()
     end
 
     gems[2]:SetTexture(y1 / 255, y2, pitch / 4 + 0.5)
-    gems[3]:SetTexture((turn == 1 and 0.8 or 0) + (IsFalling() and 0.2 or 0), (IsMounted() and 0.8 or 0) + (IsFlying() and 0.2 or 0),  (UnitAffectingCombat("player") and 0.8 or 0) + (UnitExists("target") and 0.2 or 0))
+    -- gems[3]:SetTexture((turn == 1 and 0.8 or 0) + (IsFalling() and 0.2 or 0), (IsMounted() and 0.8 or 0) + (IsFlying() and 0.2 or 0),  (UnitAffectingCombat("player") and 0.8 or 0) + (UnitExists("target") and 0.2 or 0))
+    gems[3]:SetTexture(IsMounted() and 1 or 0, IsFlying() and 1 or 0, IsFalling() and 1 or 0)
+    gems[4]:SetTexture(UnitAffectingCombat("player") and 1 or 0, UnitExists("target") and 1 or 0, turn)
+
     if nodes[nodeIdx] ~= nil then 
         x1, x2 = math.modf(nodes[nodeIdx][1] * 255)
         y1, y2 = math.modf(nodes[nodeIdx][2] * 255)
-        gems[4]:SetTexture(x1 / 255, x2, 0)
-        gems[5]:SetTexture(y1 / 255, y2, 0)
+        gems[5]:SetTexture(x1 / 255, x2, 0)
+        gems[6]:SetTexture(y1 / 255, y2, 0)
     end
 end
 
