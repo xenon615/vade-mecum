@@ -651,6 +651,17 @@ function createList()
         end    
     end)
     listFrame:CreateFontString("VadeMecum_Pages", "OVERLAY", "GameFontNormal"):SetPoint("BOTTOM", -10, 10)
+
+--  ---------------------------------------------------------------------------------------------------------------
+    -- btn = CreateFrame("Button","myButton", UIParent ,"SecureActionButtonTemplate");
+    -- btn:SetPoint('TOPLEFT', 100, 40)
+    -- btn:SetSize(60, 30)
+    -- btn:SetText('go')
+    -- btn:SetAttribute("type","target");
+    -- btn:SetAttribute("unit","nameExample");
+
+
+-- -------------------------------------------------------------------------------------------------------------
 end
 
 -- +++

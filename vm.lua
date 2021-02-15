@@ -27,11 +27,21 @@ function init ()
         if msg == '' then 
             vm.Notes.display()
         elseif msg == 'assist' then
-            vm.Assistant.go()
-    elseif msg == 'assist next' then 
+            vm.Assistant.settings()
+        elseif msg == 'assist next' then 
             vm.Assistant.next()
+        elseif msg == 'assist switch' then 
+            vm.Assistant.switchRestype()
+        elseif msg == 'assist go' then
+            vm.Assistant.go()
         elseif msg == 'debug' then
-            print(GetCursorPosition())
+            -- local round = vm.Utils.round
+            -- print(UIParent:GetEffectiveScale())
+            -- print(GetCursorPosition())
+            -- print(round(Minimap:GetWidth(),2 ), round(Minimap:GetHeight(),2))
+            -- print(round(Minimap:GetLeft(),2 ), round(Minimap:GetTop(),2))
+            -- print(round(Minimap:GetLeft() * UIParent:GetEffectiveScale() + UIParent:GetEffectiveScale() * Minimap:GetWidth() / 2, 2))
+            -- vm.Assistant.go()
         end
         
     end

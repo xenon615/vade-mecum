@@ -5,60 +5,45 @@
 #include <WinAPIRes.au3>
 #include <GDIPlus.au3>
 
+#include <Array.au3>
+
 _GDIPlus_Startup() 
 Opt("PixelCoordMode", 2)
 Opt("MouseCoordMode", 2)
 $dll = DllOpen("user32.dll")
 Const $PI  = 3.1415
 Local $hwnd = 0, $x = 0 , $y = 0, $faceTo = 0, $pitch = 0, $isFlying = False, $isMounted = false,$isFalling = false,  $inCombat = False, $hasTarget = False, $turn = False, $turnAngle = 0, $target[2]
-Local $state, $enter_state_time = 0, $prevState = '', $detected = False;
+Local $state, $enter_state_time = 0, $prevState = '', $detected = False
+Local  $backTo, $prevX, $prevY
 HotKeySet("{F10}", "Kill")
 HotKeySet("{F11}", "Pause")
+HotKeySet("{F9}", "Test")
 
 
 $hwnd = WinGetHandle("World of Warcraft")
 WinActivate($hwnd)
 WinWaitActive($hwnd)
-$clientSize = WinGetClientSize ($hwnd)
+$clientSize = WinGetClientSize($hwnd)
 $centerX = Floor($clientSize[0] / 2)
-$centerY = Floor($clientSize[1] / 2) 
+$centerY = Floor($clientSize[1] / 2)    
 MouseMove($centerX, $centerY)
 $errorA = 0.01
 $errorD = 0.001
-
-
-;~ local $miniMapCenter[2] = [1811, 113]
-
-
-$fullColor = 0xE7B003
+local $indicators[5]
+local $fullColor = 0xE7B003
 local $cursorColor[2] = ['FF241A10', 'FF6C5235']
 local $heightRatio = $clientSize[1] / 768
-$sizeQ = 0.9 * $heightRatio
+local $miniMapCenter[2]
+local $scale = 1
+;~ local $fh = FileOpen ('log.txt', 1)
 
-local $miniMapCenter[2] = [1287 * $heightRatio, (768 - 689) * $heightRatio]
-;~ MouseMove($miniMapCenter[0], $miniMapCenter[1])
-;~ Sleep(5000)
-;~ Exit
-local $indicators[5]
-$indSize = 20 * $sizeQ
-For $i = 0 To 4
-    $indicators[$i] = $indSize * ($i + 0.5)
-    MouseMove($indicators[$i], 10)
-    Sleep(2000)
-Next
-
+Setup()
 getData()
 Go()
 
 Func Go()
-    ;~ enterState('Running')
+    enterState('Running')
     ;~ enterState('Idle')
-    if (not $isFlying) Then
-        enterState('Work')
-    Else
-        enterState('Running')
-    EndIf
-
     While(True)
         getData()
         Call($state)
@@ -75,28 +60,95 @@ EndFunc
 ;~  ---
 
 Func Pause()
-    local $pos = MouseGetPos()
-    debug($pos[0] & '   ' & $pos[1])
-    ;~ $color = Hex(PixelGetColor($pos[0], $pos[1], $hwnd))
-    ;~ debug($pos[0] & '   ' & $pos[1] & '    ' & $color)
-    ;~ if not ($state == 'Idle') Then
-    ;~     $prevState = $state
-    ;~     enterState('Idle')
-    ;~ Else
-    ;~     enterState($prevState)
-    ;~ EndIf
+    ;~ local $pos = MouseGetPos()
+    ;~ debug($pos[0] & '   ' & $pos[1])
+    ;~ ;~ $color = Hex(PixelGetColor($pos[0], $pos[1], $hwnd))
+    ;~ ;~ debug($pos[0] & '   ' & $pos[1] & '    ' & $color)
+    if not ($state == 'Idle') Then
+        $prevState = $state
+        enterState('Idle')
+    Else
+        enterState($prevState)
+    EndIf
+   
 EndFunc 
 
 ;~  ---
 
+Func SendCommand($string)
+    $a = StringSplit($string, "")
+    For $i = 1  To $a[0] 
+        Send($a[$i])
+        Sleep(100)
+    Next
+    Sleep(2000)
+    Send('{Enter}')
+EndFunc
+
+;~  ---
+
+Func Setup()
+    SendCommand("/vm assist")
+    Sleep(2000)
+    $rgb = _ColorGetRGB(PixelGetColor(1,1 , $hwnd))
+    ;~ _ArrayDisplay($rgb, "", Default, 8)
+    $scale = Round($rgb[0] / 255, 2)
+    $mmx = Round($rgb[1] * 1300 / 255)
+    $mmy = Round($rgb[2] * 768 / 255 )
+    ;~ debug($scale & '    ' & $mmx & '  ' & $mmy )
+    Sleep(2000)
+    
+    $sizeQ = $scale * $heightRatio
+    $miniMapCenter[0] = $mmx * $heightRatio
+    $miniMapCenter[1] =  (768 - $mmy) * $heightRatio
+
+    $indSize = 20 * $sizeQ
+    For $i = 0 To 4
+        $indicators[$i] = $indSize * ($i + 0.5)
+    Next
+    ;~ _ArrayDisplay($indicators, "", Default, 8)
+
+    SendCommand('/vm assist go')
+    Sleep(2000)
+EndFunc
+
+;~  ---
+
+Func Test()
+    stay()
+    Sleep(1000)
+
+    ;~ debug('mounted ' & $isMounted & '  flying ' & $isFlying & '  combat ' & $inCombat & '  target '  & $hasTarget & '  turn ' &  $turn)
+    Beep()
+    For $i = 0 To 4
+        MouseMove($indicators[$i], 10)
+        Sleep(2000)
+    Next
+    Beep()
+    MouseMove($miniMapCenter[0], $miniMapCenter[1])
+    Sleep(2000)
+    Beep()
+
+    for $j = 100 * $heightRatio To 650 * $heightRatio Step 100 *  $heightRatio
+        for $i = 200 * $heightRatio To 1100 * $heightRatio Step  100 *  $heightRatio
+            MouseMove($i , $j, 2)
+        Next
+    Next    
+    Beep()
+EndFunc
+
+;~  ---
+
 Func debug($s)
-    ToolTip($s, 300, 300)
+    ToolTip($s, 0, 300, 'debug', 0, 4)
     ;~ ConsoleWrite($s & @LF)
+    ;~ FileWriteLine($fh, $s)
 EndFunc 
 
 ;~  ---
 
 Func setTarget()
+    Beep(300, 200)
     Send('3')
     Sleep(2000)
 
@@ -120,9 +172,11 @@ Func enterState($s)
     $enter_state_time = TimerInit()
     Switch $s
         Case 'Running'
-            if ($isFlying) Then
-                setTarget()
-            EndIf
+                if $state <> 'Back'  Then
+                    setTarget()
+                EndIf    
+                $prevX = $x
+                $prevY = $y
         Case 'Landing'
             Send('{x down}')
         Case 'Work'
@@ -130,7 +184,7 @@ Func enterState($s)
             Sleep(1000)
         Case 'Combat'
             ;~ Send('+1')   
-            Send('{TAB}')
+
             ;~ Send('+4')
         ;~ Case 'Idle'
         ;~     MouseMove(25 * 1.16, 5)
@@ -139,16 +193,26 @@ Func enterState($s)
             Beep(880, 500)
             $prevState = $state
             Send('4')
+        Case 'Back'
+            Beep(300)
+            Beep(900)
+            MouseDown($MOUSE_CLICK_RIGHT)
+            $backTo = $faceTo <= $PI ? $faceTo + $PI *  0.75 : $faceTo - $PI * 0.75
+            debug ('enter back  face '  & ' ' &  $faceTo  &  '  back '  & $backTo)
     EndSwitch
     $state = $s
 EndFunc
 
-Func exitState()
+Func exitState($new = '')
     debug('Exit ' & $state)
     stay()
     getData()
     Switch $state
         Case 'Running'
+            if $new == 'Back' Then
+                return enterState('Back')
+            EndIf
+
             If $detected Then
                 return enterState('Landing')
             Else
@@ -172,17 +236,22 @@ Func exitState()
             EndIf
             Send('1')
             Sleep(5000)
-            ;~ Send('{w down}')
-            Sleep(500)
-            Send('{SPACE down}')
-            Sleep(11000)
-            Send('{SPACE up}')
             enterState('Running')
         Case 'Combat'
-            ;~ Send('+3')
-            enterState($prevState)
+            if $inCombat Then
+                enterState('Back')
+            Else
+                enterState($prevState)
+            EndIf
         Case 'Idle'
             enterState('Combat')
+        Case 'Back'
+                Send('{w down}')
+                Send('{SPACE down}')
+                Sleep(2000)
+                Send('{w up}')
+                Send('{SPACE up}')
+                enterState('Running')
     EndSwitch 
 EndFunc 
 
@@ -196,25 +265,37 @@ EndFunc
 
 ;~  ---
 
+
+;~  ---
+
 Func Falling()
     if not $isFalling Then
         return enterState($prevState)
     EndIf
-
 EndFunc
 
 
 ;~  ---
 
 Func Combat()
+    debug('mounted ' & $isMounted & '  flying ' & $isFlying & '  combat ' & $inCombat & '  target '  & $hasTarget & '  turn ' &  $turn)
+    If not $hasTarget Then
+        Send('{TAB}')
+        Sleep(500)
+    EndIf
     Send('2')
     Sleep(2500)
     if ($turn) Then
-        $turn = false
-        Send('{a down}')
-        Sleep(450)
-        Send('{a up}')
+        ;~ Local $a = $faceTo <= $PI ? $faceTo + $PI *  0.9 : $faceTo - $PI * 0.9
+        ;~ if (not _IsPressed("02", $dll)) Then
+        ;~     MouseDown($MOUSE_CLICK_RIGHT)
+        ;~ EndIf
+        ;~ Turn(sin($faceTo - $a), 200)
+        ;~ MouseUp($MOUSE_CLICK_RIGHT)
+        Send('{d down}')
         Sleep(500)
+        Send('{d up}')
+        Sleep(1000)
     EndIf
     if(not $inCombat) Then
         return exitState()
@@ -232,10 +313,10 @@ Func Work()
     if (TimerDiff($enter_state_time) > 2000) Then
         return exitState()
     EndIf
-    for $j = $centerY - 350 To $centerY + 350 Step 100
-        for $i = $centerX - 450 To $centerX + 450 Step  100
-            MouseMove($i , $j, 2)
 
+    for $j = 100 * $heightRatio To 650 * $heightRatio Step 100 *  $heightRatio
+        for $i = 200 * $heightRatio To 1100 * $heightRatio Step  100 *  $heightRatio
+            MouseMove($i , $j, 2)
             $aCursor = _WinAPI_GetCursorInfo()
             
             $hImage = _GDIPlus_BitmapCreateFromHICON32($aCursor[2])
@@ -247,7 +328,6 @@ Func Work()
                 if ( _IsPressed("02", $dll)) Then
                     MouseUp($MOUSE_CLICK_RIGHT)
                 EndIf
-                Sleep(2000)
                 Sleep(Random(500, 1000))
                 Send("{SHIFTDOWN}")
                 Sleep(100)
@@ -264,7 +344,7 @@ EndFunc
 ;~  ---
 
 Func Landing()
-    if (TimerDiff($enter_state_time) > 60000) Then
+    if (TimerDiff($enter_state_time) > 30000) Then
         return enterState('Running')
     EndIf
     if (not $isFlying) Then 
@@ -274,27 +354,32 @@ EndFunc
 
 ;~  ---
 
-Func Running()
-
-    if (TimerDiff($enter_state_time) > 30000) Then
+Func Back()
+    $s = sin($faceTo - $backTo)
+    debug('turn back   ' & $faceTo  & '    ' & $backTo)
+    if abs($s) <  0.1 Then
         return exitState()
     EndIf
+    Turn($s)
+EndFunc 
 
+;~  ---
+
+Func Running()
     if not $isMounted Then
         If (_IsPressed("57", $dll)) Then
             Send('{w up}')
         EndIf
+        Sleep(1000)
         Send('1')
         Sleep(2000)
     EndIf
     local $toPoint = direction()
-    ;~ debug($toPoint)
-
     if (not $isFlying) Then
         Send('{SPACE down}')
-        Sleep(4000)
+        Sleep(500)
         Send('{SPACE up}')
-        return
+        ;~ return
     EndIf
     $elevation = 0    
     $devSin = sin($faceTo - $toPoint)
@@ -305,14 +390,14 @@ Func Running()
             MouseDown($MOUSE_CLICK_RIGHT)
         EndIf
         Level($elSin)
-        ;~ if (abs($elSin) > 0.1) Then
-        ;~     return
-        ;~ EndIf    
+        if (abs($elSin) > 0.1) Then
+            return
+        EndIf    
     EndIf
     
     
 
-    if (abs($devSin) > $errorA * 10) Then
+    if (abs($devSin) > $errorA) Then
         if (not _IsPressed("02", $dll)) Then
             MouseDown($MOUSE_CLICK_RIGHT)
         EndIf
@@ -333,11 +418,26 @@ Func Running()
         EndIf
     EndIf
     local $range = getRange()
+    if not $detected Then 
+        if (TimerDiff($enter_state_time) > 10000) Then
+            if (abs($x - $prevx) < $errorD) and (abs($y - $prevY) < $errorD) Then
+                return exitState('Back')
+            EndIf
+            $prevX = $x
+            $prevY = $y 
+            $enter_state_time = TimerInit()
+        EndIf
+    EndIf
 
-    ;~ debug('pitch ' & Round($pitch, 4)  & ' Running to ' & Round($target[0], 4) & ' / ' & Round($target[1], 4) & ' devSin ' & Round($devSin, 4) & ' range '  & Round($range, 2))
 
+    debug(' pitch ' & Round($pitch, 4)  & ' Running to ' & Round($target[0], 4) & ' / ' & Round($target[1], 4) & ' devSin ' & Round($devSin, 4) & ' range '  & Round($range, 4) & ' topoint ' &  Round($toPoint, 4))
+    ;~ ConsoleWrite($range & @LF)
     If ( $range < $errorD) Then
-        return exitState()
+        if not $detected Then
+            setTarget()
+        Else
+            return exitState()
+        EndIf
     EndIf
     If ($range <  0.01) and not $detected Then
             local $pos = PixelSearch($miniMapCenter[0] - 15, $miniMapCenter[1] - 15, $miniMapCenter[0] + 15, $miniMapCenter[1] + 15, $fullColor , 20, 2, $hwnd)
@@ -408,7 +508,6 @@ EndFunc
 ;~  ---
 
 Func stay()
-    ;~ Sleep(1000)
     if (_IsPressed("57", $dll)) Then
         Send('{w up}')
     EndIf
@@ -429,15 +528,39 @@ EndFunc
 
 ;~  ---
 
-Func atan2($y, $x)
-    Return (2 * ATan($y / ($x + Sqrt($x * $x + $y * $y))))
-EndFunc                   
+;~ Func atan2($y, $x)
+;~     Return (2 * ATan($y / ($x + Sqrt($x * $x + $y * $y))))
+;~ EndFunc                   
 
-;~  ---
+;~ ;~  ---
+
+;~ Func direction()
+;~     Local $a = atan2($target[0] - $x,  $target[1] - $y)
+;~     return $a < $PI  ? $a + $PI : $a
+;~ EndFunc
+
 
 Func direction()
-    return atan2($target[0] - $x,  $target[1] - $y) + $PI
-EndFunc
+    $dx = $target[0] - $x 
+    $dy = $target[1] - $y
+
+    If $dx < 0 and $dy == 0 Then
+        $rad = $PI /2
+    ElseIf $dx > 0 and $dy == 0 Then
+        $rad = 3 * $PI / 2
+    ElseIf $dx == 0 and $dy > 0 Then
+        $rad = $PI
+    ElseIf $dx == 0 and $dy < 0 Then
+        $rad = 0  
+    ElseIf $dx == 0 and $dy == 0 Then
+        $rad = 0
+    Else  
+        $rad = (2 * ATan($dx / ($dy + Sqrt($dy * $dy + $dx * $dx))))
+        $rad = $rad + $PI
+    EndIf
+
+    return $rad
+EndFunc 
 
 ;~  ---
 
@@ -449,6 +572,9 @@ Func getData()
         Exit 1
     EndIf
     $rgb = _ColorGetRGB($color1)
+    if ($rgb[0] == 0) and ($rgb[1] == 0) and ($rgb[2] == 0) Then
+        return setTarget()
+    EndIf
     $x = ($rgb[0] + $rgb[1] / 255) / 255
     $faceTo = ($rgb[2] / 255) * 7
 
@@ -464,18 +590,18 @@ Func getData()
     $isFlying = ($rgb[1] == 51) or  ($rgb[1] == 255)  ? True : False
     $inCombat = $rgb[2] >= 204 ? True : False
     $hasTarget = ($rgb[2] == 51) or  ($rgb[2] == 255)  ? True : False
-    debug('mounted ' & $isMounted & '       flying ' & $isFlying & '          combat ' & $inCombat & '           target '  & $hasTarget & '          turn ' &  $turn)
+   
 EndFunc
 
 ;~  ---
 
-Func Turn($sin)
+Func Turn($sin, $speed = 10)
     local $mouseX = MouseGetPos(0)
     local $mouseY = MouseGetPos(1)
-    if (abs($mouseX -  $centerX ) > 200 ) Then
-        MouseMove($centerX, $centerY)
-    EndIf
-    MouseMove($mouseX + 10 * $sin, $mouseY, 0)
+    ;~ if (abs($mouseX -  $centerX ) > 200 ) Then
+    ;~     MouseMove($centerX, $centerY)
+    ;~ EndIf
+    MouseMove($mouseX + $speed * $sin, $mouseY, 2)
 
 EndFunc
 
