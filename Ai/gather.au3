@@ -14,7 +14,8 @@ $dll = DllOpen("user32.dll")
 Const $PI  = 3.1415
 Local $hwnd = 0, $x = 0 , $y = 0, $faceTo = 0, $pitch = 0, $isFlying = False, $isMounted = false,$isFalling = false,  $inCombat = False, $hasTarget = False, $turn = False, $turnAngle = 0, $target[2]
 Local $state, $enter_state_time = 0, $prevState = '', $detected = False
-Local  $backTo, $prevX, $prevY
+Local $backTo, $prevX, $prevY
+Local $targetOnMap = false
 HotKeySet("{F10}", "Kill")
 HotKeySet("{F11}", "Pause")
 HotKeySet("{F9}", "Test")
@@ -27,15 +28,17 @@ $clientSize = WinGetClientSize($hwnd)
 $centerX = Floor($clientSize[0] / 2)
 $centerY = Floor($clientSize[1] / 2)    
 MouseMove($centerX, $centerY)
-$errorA = 0.01
+$errorA = $PI * 5  / 180 
 $errorD = 0.001
 local $indicators[6]
 local $fullColor = 0xE7B003
 local $cursorColor[2] = ['FF241A10', 'FF6C5235']
 local $heightRatio = $clientSize[1] / 768
 local $miniMapCenter[2]
-local $scale = 1
+local $scale = 1, $sizeQ = 0
 ;~ local $fh = FileOpen ('log.txt', 1)
+
+
 
 Setup()
 getData()
@@ -117,8 +120,6 @@ EndFunc
 Func Test()
     stay()
     Sleep(1000)
-
-    ;~ debug('mounted ' & $isMounted & '  flying ' & $isFlying & '  combat ' & $inCombat & '  target '  & $hasTarget & '  turn ' &  $turn)
     Beep()
     For $i = 0 To 5
         MouseMove($indicators[$i], 10)
@@ -148,15 +149,30 @@ EndFunc
 ;~  ---
 
 Func setTarget()
-    Beep(300, 200)
-    Send('3')
-    ;~ Sleep(10000)
-    ;~ $rgb = _ColorGetRGB(PixelGetColor($indicators[4], 5, $hwnd))
-    ;~ $target[0] = ($rgb[0] + $rgb[1] / 255) / 255
-
-    ;~ $rgb = _ColorGetRGB(PixelGetColor($indicators[5], 5, $hwnd))
-    ;~ $target[1] = ($rgb[0] + $rgb[1] / 255) / 255
+    stay()
     $detected = False
+    While True 
+        Beep(300, 200)
+        Send('3')
+        Sleep(1000)
+        $rgb = _ColorGetRGB(PixelGetColor($indicators[4], 5, $hwnd))
+        $target[0] = ($rgb[0] + $rgb[1] / 255) / 255
+        $targetOnMap = $rgb[2] == 0 ? False : True
+        $rgb = _ColorGetRGB(PixelGetColor($indicators[5], 5, $hwnd))
+        $target[1] = ($rgb[0] + $rgb[1] / 255) / 255
+        Local $r = 35 * $sizeQ
+        debug('on map ' & $targetOnMap)
+        ;~ Sleep(5000)
+        If $targetOnMap Then
+            local $pos = PixelSearch($miniMapCenter[0] -$r , $miniMapCenter[1] - $r, $miniMapCenter[0] + $r, $miniMapCenter[1] + $r, $fullColor , 20, 2, $hwnd)
+            If not @error Then
+                return 
+            EndIf
+        Else
+            return
+        EndIf
+    WEnd
+    
 EndFunc 
 
 ;~  ---
@@ -164,7 +180,6 @@ EndFunc
 Func enterState($s)
     debug('Enter ' & $s)
     getData()
-    $enter_state_time = TimerInit()
     Switch $s
         Case 'Running'
                 if $state <> 'Back'  Then
@@ -192,10 +207,11 @@ Func enterState($s)
             Beep(300)
             Beep(900)
             MouseDown($MOUSE_CLICK_RIGHT)
-            $backTo = $faceTo <= $PI ? $faceTo + $PI *  0.95 : $faceTo - $PI * 0.95
+            $backTo = $faceTo <= $PI ? $faceTo + $PI * 0.98 : $faceTo - $PI * 0.98
             debug ('enter back  face '  & ' ' &  $faceTo  &  '  back '  & $backTo)
     EndSwitch
     $state = $s
+    $enter_state_time = TimerInit()
 EndFunc
 
 Func exitState($new = '')
@@ -343,12 +359,12 @@ EndFunc
 ;~  ---
 
 Func Back()
-    $s = sin($faceTo - $backTo)
+    $devA = $faceTo - $backTo
     debug('turn back   ' & $faceTo  & '    ' & $backTo)
-    if abs($s) <  0.1 Then
+    if abs($devA) <= $errorA Then
         return exitState()
     EndIf
-    Turn($s)
+    Turn($devA)
 EndFunc 
 
 ;~  ---
@@ -361,17 +377,18 @@ Func Running()
         Sleep(1000)
         Send('1')
         Sleep(2000)
+        return 
     EndIf
-    local $toPoint = direction()
+    
     if (not $isFlying) Then
         Send('{SPACE down}')
         Sleep(500)
         Send('{SPACE up}')
-        ;~ return
+        return
     EndIf
-    $elevation = 0    
-    $devSin = sin($faceTo - $toPoint)
-    $elSin = sin($pitch - $elevation)
+    
+
+    $elSin = sin($pitch)
     
     if (abs($elSin) > 0.01) Then
         if (not _IsPressed("02", $dll)) Then
@@ -379,24 +396,30 @@ Func Running()
         EndIf
         Level($elSin)
         if (abs($elSin) > 0.5) Then
+            If (_IsPressed("57", $dll)) Then
+                Send('{w up}')
+            EndIf
             return
         EndIf    
     EndIf
-    
-    
 
-    if (abs($devSin) > $errorA) Then
+    local $toPoint = direction()
+    local $devA = $faceTo - $toPoint
+    if (abs($devA) > $errorA) Then
         if (not _IsPressed("02", $dll)) Then
             MouseDown($MOUSE_CLICK_RIGHT)
+            Beep(5000, 100)
         EndIf
-        Turn($devSin)
+        Turn($devA)
     Else
         if ( _IsPressed("02", $dll)) Then
             MouseUp($MOUSE_CLICK_RIGHT)
+            Beep(500, 100)
+            Beep(6000, 100)
         EndIf
     EndIf
     
-    If abs($devSin) > 0.2 Then
+    If abs($devA) > $PI / 4  Then
         If (_IsPressed("57", $dll)) Then
             Send('{w up}')
         EndIf
@@ -417,9 +440,18 @@ Func Running()
         EndIf
     EndIf
 
-
-    debug(' pitch ' & Round($pitch, 4)  & ' Running to ' & Round($target[0], 4) & ' / ' & Round($target[1], 4) & ' devSin ' & Round($devSin, 4) & ' range '  & Round($range, 4) & ' topoint ' &  Round($toPoint, 4))
-    ;~ ConsoleWrite($range & @LF)
+    debug(StringFormat('devA: %.4f  Pitch: %.4f   Range: %.4f  ToTarget: %.4f  faceTo: %.4f ', $devA * 180 / $PI, $pitch, $range, $toPoint * 180 / $PI, $faceTo * 180 / $PI))
+    
+    If ($range <  $errorD * 10) and not $detected Then
+        local $pos = PixelSearch($miniMapCenter[0] - 15, $miniMapCenter[1] - 15, $miniMapCenter[0] + 15, $miniMapCenter[1] + 15, $fullColor , 20, 2, $hwnd)
+        If @error Then
+            $detected = False
+        else
+            Beep()
+            $detected = True
+        EndIf    
+    EndIf
+    
     If ( $range < $errorD) Then
         if not $detected Then
             setTarget()
@@ -427,15 +459,7 @@ Func Running()
             return exitState()
         EndIf
     EndIf
-    If ($range <  0.01) and not $detected Then
-            local $pos = PixelSearch($miniMapCenter[0] - 15, $miniMapCenter[1] - 15, $miniMapCenter[0] + 15, $miniMapCenter[1] + 15, $fullColor , 20, 2, $hwnd)
-            If @error Then
-                $detected = False
-            else
-                Beep()
-                $detected = True
-            EndIf    
-    EndIf
+
 EndFunc 
 
 ;~  ---
@@ -454,20 +478,21 @@ Func Walking()
     EndIf
 
     local $toPoint = direction()
-    $devSin = sin($faceTo - $toPoint)
+    $devA = $faceTo - $toPoint
 
-    if (abs($devSin) > $errorA) Then
+    if (abs($devA) > $errorA) Then
         if (not _IsPressed("02", $dll)) Then
             MouseDown($MOUSE_CLICK_RIGHT)
+            
         EndIf
-        Turn($devSin)
+        Turn($devA)
     Else
         if ( _IsPressed("02", $dll)) Then
             MouseUp($MOUSE_CLICK_RIGHT)
         EndIf
     EndIf
     
-    If abs($devSin) > 0.1 Then
+    If abs($devA) > $PI / 4 Then
         If (_IsPressed("57", $dll)) Then
             Send('{w up}')
         EndIf
@@ -477,8 +502,6 @@ Func Walking()
         EndIf
     EndIf
     local $range = getRange()
-
-    ;~ debug('pitch ' & Round($pitch, 4)  & ' Walking to ' & Round($target[0], 4) & ' / ' & Round($target[1], 4) & ' devSin ' & Round($devSin, 4) & ' range '  & Round($range, 4))
 
     If ( $range < ($errorD / 10)) Then
         return exitState()
@@ -565,24 +588,25 @@ Func getData()
     $hasTarget = $rgb[1] == 0 ? False : True 
     $turn = $rgb[2] == 0 ? False : True
 
-    $rgb = _ColorGetRGB(PixelGetColor($indicators[4], 5, $hwnd))
-    $target[0] = ($rgb[0] + $rgb[1] / 255) / 255
-
-    $rgb = _ColorGetRGB(PixelGetColor($indicators[5], 5, $hwnd))
-    $target[1] = ($rgb[0] + $rgb[1] / 255) / 255
 EndFunc
 
 ;~  ---
 
-Func Turn($sin, $speed = 10)
+Func Turn($dev, $speed = 10)
     local $mouseX = MouseGetPos(0)
     local $mouseY = MouseGetPos(1)
-    ;~ if (abs($mouseX -  $centerX ) > 200 ) Then
-    ;~     MouseMove($centerX, $centerY)
-    ;~ EndIf
-    MouseMove($mouseX + $speed * $sin, $mouseY, 2)
+    if (abs($dev) >= $PI - $errorA) and (abs($dev) <= $PI + $errorA) Then
+        $k = $dev > 0 ? 2 : -2
+    Else
+        ;~ If  (abs($dev) >= 2 * $PI - $errorA) and (abs($dev) <= 2 * $PI + $errorA)  Then
+
+        ;~ EndIf
+        $k = sin($dev)
+    EndIf    
+    MouseMove($mouseX + $speed * $k, $mouseY, 0)
 
 EndFunc
+
 
 ;~  ---
 

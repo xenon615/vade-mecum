@@ -1,5 +1,5 @@
 local addonName, vm = ...
-local gFrame, gems, turn, nodes, nodeIdx
+local gFrame, gems, turn, nodes, nodeIdx, x, y, zone, continent 
 local resType, reset = 'HERB', false 
 --local functions
 local  createTransmitter, colorise, update, event, fillNodes, regScripts
@@ -18,6 +18,15 @@ vm.Assistant = {
             nodeIdx =  nodeIdx + 1
         end
         reset = false
+        if nodes[nodeIdx] ~= nil then 
+            x1, x2 = math.modf(nodes[nodeIdx][1] * 255)
+            y1, y2 = math.modf(nodes[nodeIdx][2] * 255)
+            local maxDist = vm.Config.MinimapSize[vm.Astrolabe.minimapOutside and 'outdoor' or 'indoor'][Minimap:GetZoom()] / 2
+            local d = vm.Astrolabe:ComputeDistance(continent, zone, x, y, continent, zone,  nodes[nodeIdx][1], nodes[nodeIdx][2]) or 0
+            -- print('distance',d,maxDist)
+            gems[5]:SetTexture(x1 / 255, x2, d < maxDist / 2 and 1 or 0)
+            gems[6]:SetTexture(y1 / 255, y2, 0)
+        end
         print('index', nodeIdx)
     end,
     switchRestype = function()
@@ -34,7 +43,7 @@ vm.Assistant = {
         
         local mmw = Minimap:GetWidth() / 2 
         local mmx, mmy = vm.Utils.round(scale * (Minimap:GetLeft() + mmw)), vm.Utils.round(scale * (Minimap:GetTop() - mmw))
-        print(mmx, mmy)
+        print(mmx, mmy, mmw)
         gems[1]:SetTexture(scale, mmx / 2000 , mmy / 1000)
     end
 
@@ -99,7 +108,7 @@ function createTransmitter()
 end
 
 function colorise()
-    local x, y = GetPlayerMapPosition('player')
+    x, y = GetPlayerMapPosition('player')
     --  /run print(GetUnitPitch('player'))4
     --  /run print(GetPlayerFacing())
     local azimuth = GetPlayerFacing()
@@ -113,16 +122,8 @@ function colorise()
     end
 
     gems[2]:SetTexture(y1 / 255, y2, pitch / 4 + 0.5)
-    -- gems[3]:SetTexture((turn == 1 and 0.8 or 0) + (IsFalling() and 0.2 or 0), (IsMounted() and 0.8 or 0) + (IsFlying() and 0.2 or 0),  (UnitAffectingCombat("player") and 0.8 or 0) + (UnitExists("target") and 0.2 or 0))
     gems[3]:SetTexture(IsMounted() and 1 or 0, IsFlying() and 1 or 0, IsFalling() and 1 or 0)
     gems[4]:SetTexture(UnitAffectingCombat("player") and 1 or 0, UnitExists("target") and 1 or 0, turn)
-
-    if nodes[nodeIdx] ~= nil then 
-        x1, x2 = math.modf(nodes[nodeIdx][1] * 255)
-        y1, y2 = math.modf(nodes[nodeIdx][2] * 255)
-        gems[5]:SetTexture(x1 / 255, x2, 0)
-        gems[6]:SetTexture(y1 / 255, y2, 0)
-    end
 end
 
 function update()
@@ -147,39 +148,36 @@ end
 --  ---
 
 function fillNodes()
-    local continent, zone = GetCurrentMapContinent(), GetCurrentMapZone()
+    continent, zone = GetCurrentMapContinent(), GetCurrentMapZone()
     local x, y = GetPlayerMapPosition('player')
     nodes = {}
     nodeIdx =   1 
-    local minXY, cornerIndex, i  = 10, 1, 1
-    
-    for nodeId, gatherType, num in Gatherer.Storage.ZoneGatherNames(continent, zone) do
+    for resourceId, gatherType, num in Gatherer.Storage.ZoneGatherNames(continent, zone) do
         if gatherType == resType then
-               for index, xPos, yPos in Gatherer.Storage.ZoneGatherNodes(continent, zone, nodeId) do
-                if minXY > (xPos  + yPos) then
-                    minXY = xPos + yPos
-                    cornerIndex = i
-                end
+            for index, xPos, yPos,cc, d1, d2, source in Gatherer.Storage.ZoneGatherNodes(continent, zone, resourceId) do
                 table.insert(nodes, {xPos, yPos})
-                i = i + 1 
+                -- if tonumber(cc) > 0 then
+                --     if suirce ~= nil then
+                --         print(source)
+                --     end
+                --     table.insert(nodes, {xPos, yPos})
+                -- end    
             end    
         end
     end
-
+    
     if (#(nodes) > 0) then 
+        cornerIndex = closestNode({x, y})
         local sortedNodes = {}
         table.insert(sortedNodes, table.remove(nodes, cornerIndex))
-
         while #(nodes) > 0 do
             table.insert(sortedNodes, table.remove(nodes, cornerIndex))
             cornerIndex = closestNode(sortedNodes[#sortedNodes])
         end
-
         nodes = sortedNodes
+        print(#nodes,'of ', resType)
 
-        nodeIdx = closestNode({x, y})
-        print(#nodes,'of', resType)
-        print('Closest node is ' .. nodeIdx .. ' ( ' .. vm.Utils.round(nodes[nodeIdx][1], 2) .. ' / ' .. vm.Utils.round(nodes[nodeIdx][2], 2) .. ')')
-        nodeIdx = nodeIdx > 1 and nodeIdx -1 or #(nodes)
+        print('Closest node is  ' .. vm.Utils.round(nodes[1][1], 2) .. ' / ' .. vm.Utils.round(nodes[1][2], 2) )
+        nodeIdx = #(nodes)
     end
 end
