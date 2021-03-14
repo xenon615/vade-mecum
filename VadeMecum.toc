@@ -4,6 +4,7 @@
 ## Author: xenon615 AKA Хворобей, Sirus x1
 ## Version: 0.35
 ## SavedVariables: VadeMecum_Notes, VadeMecum_Settings
+Find.lua
 MiniMap.xml
 WorldMap.xml
 Utils.lua

@@ -241,16 +241,9 @@ end
 function createSetMate()
     mateFrame = CreateFrame('Frame')
     mateFrame:Hide();
-    local backDrop = {
-        bgFile = [[Interface\Buttons\WHITE8x8]],
-        edgeFile = [[Interface\Tooltips\UI-Tooltip-Border]],
-        edgeSize = 14,
-        insets = {left = 3, right = 3, top = 3, bottom = 3}
-    }
-
     mateFrame:SetSize(300, 50)
     mateFrame:SetPoint("CENTER", 0, 0)
-    mateFrame:SetBackdrop(backDrop)
+    mateFrame:SetBackdrop(vm.Config.backDrop)
     mateFrame:SetBackdropColor(0, 0, 0, 0.8)
     mateFrame:SetFrameStrata("FULLSCREEN_DIALOG")
 
@@ -305,18 +298,19 @@ end
 
 function createForm()
     formFrame = CreateFrame("Frame")
+    local hideForm = function()
+        formFrame:Hide()
+        if listFrame == nil then
+            createList()
+        end
+        listFrame:Show()
+        getPage(currentPage)
+    end
     formFrame:Hide();
-    local backDrop = {
-        bgFile = [[Interface\Buttons\WHITE8x8]],
-        edgeFile = [[Interface\Tooltips\UI-Tooltip-Border]],
-        edgeSize = 14,
-        insets = {left = 3, right = 3, top = 3, bottom = 3}
-    }
     formFrame:SetSize(600, 200)
     formFrame:SetPoint("CENTER", 0, 100)
-    formFrame:SetBackdrop(backDrop)
+    formFrame:SetBackdrop(vm.Config.backDrop)
     formFrame:SetBackdropColor(0, 0, 0, 0.8)
-    -- formFrame:SetFrameStrata("FULLSCREEN_DIALOG")
 
 -- --- =================================================================================================================================================
     
@@ -364,6 +358,7 @@ function createForm()
         formFrame[v]:SetAutoFocus(false)
         formFrame[v]:SetSize(editWidth, 30)
         formFrame[v]:SetPoint("TOPLEFT",  400 +  ((k -1 ) * (editWidth + slash:GetWidth()))  , -10)
+        formFrame[v]:SetScript("OnEscapePressed", hideForm)
     end
     slash:SetPoint('TOPLEFT', 400 + editWidth, -10);
 
@@ -372,7 +367,7 @@ function createForm()
     local cont = CreateFrame("Frame", nil, formFrame)
     cont:SetSize(formFrame:GetWidth() - 20, 80)
     cont:SetPoint("TOPLEFT", 10, -50)   
-    cont:SetBackdrop(backDrop)
+    cont:SetBackdrop(vm.Config.backDrop)
     cont:SetBackdropColor(0, 0, 0, 0.5)
 
 -- ---
@@ -401,6 +396,7 @@ function createForm()
             VadeMecum_Form_Scroll:SetVerticalScroll(h - hs)
         end
     end)
+    note:SetScript("OnEscapePressed", hideForm)
 
 
     formFrame.note = note
@@ -429,12 +425,7 @@ function createForm()
     local colorI = CreateFrame('Button','VadeMecum_Edit_ColorI', formFrame)
     colorI:SetPoint("BOTTOMLEFT",  10 , 40)
     colorI:SetSize(20,20)
-    colorI:SetBackdrop({
-        bgFile = [[Interface\Buttons\WHITE8x8]],
-        edgeFile = [[Interface\Tooltips\UI-Tooltip-Border]],
-        edgeSize = 14,
-        insets = {left = 3, right = 3, top = 3, bottom = 3}
-    }) 
+    colorI:SetBackdrop(vm.Config.backDrop) 
     colorI:SetScript('OnClick', function(self, button, down) 
         ToggleDropDownMenu(1, nil, colorF, self:GetName(), 0, 0)
     end)
@@ -461,13 +452,7 @@ local sb = CreateFrame("Button","VadeMecum_Edit_Close", formFrame, "UIPanelButto
     sb:SetWidth(60)
     sb:SetPoint("BOTTOMLEFT", 10, 10)
     sb:SetText("Close")
-    sb:SetScript("OnClick", function()
-        if listFrame ~= nil then
-            formFrame:Hide()
-            listFrame:Show()
-        end
-        getPage(currentPage)
-    end)
+    sb:SetScript("OnClick", hideForm)
 end
 
 -- ---
@@ -475,12 +460,6 @@ end
 function createList()
     listFrame = CreateFrame("Frame")
     listFrame:Hide();
-    local backDrop = {
-        bgFile = [[Interface\Buttons\WHITE8x8]],
-        edgeFile = [[Interface\Tooltips\UI-Tooltip-Border]],
-        edgeSize = 14,
-        insets = {left = 3, right = 3, top = 3, bottom = 3}
-    }
     local  listFrameWidth, listFrameHeight = 1000, 500
     listFrame:EnableKeyboard(true)
     listFrame:SetScript('OnKeyUp', function(self, key)
@@ -490,12 +469,12 @@ function createList()
     end)
     listFrame:SetSize(listFrameWidth, listFrameHeight)
     listFrame:SetPoint("CENTER", 0, 0)
-    listFrame:SetBackdrop(backDrop)
+    listFrame:SetBackdrop(vm.Config.backDrop)
     listFrame:SetBackdropColor(0, 0, 0, 0.5)
     local container = CreateFrame("Frame", "VadeMecum_List_Container", listFrame)
     container:SetSize(listFrame:GetWidth() - 60 , 400)
     container:SetPoint("CENTER", 0, 0)
-    container:SetBackdrop(backDrop)
+    container:SetBackdrop(vm.Config.backDrop)
     container:SetBackdropColor(0, 0, 0, 0.5)
     local lineHeight = 40
     for i = 1, rowsPerPage do 
@@ -503,7 +482,7 @@ function createList()
         items[i].row = CreateFrame("Frame", nil, container)
         items[i].row:SetSize(container:GetWidth(), lineHeight)
         items[i].row:SetPoint("TOPLEFT", 0, (i - 1) * -lineHeight)
-        items[i].row:SetBackdrop(backDrop)
+        items[i].row:SetBackdrop(vm.Config.backDrop)
         items[i].row:SetBackdropColor(0, 0, 0, 0.5)
 
         items[i].row:EnableMouse(true)
@@ -652,16 +631,6 @@ function createList()
     end)
     listFrame:CreateFontString("VadeMecum_Pages", "OVERLAY", "GameFontNormal"):SetPoint("BOTTOM", -10, 10)
 
---  ---------------------------------------------------------------------------------------------------------------
-    -- btn = CreateFrame("Button","myButton", UIParent ,"SecureActionButtonTemplate");
-    -- btn:SetPoint('TOPLEFT', 100, 40)
-    -- btn:SetSize(60, 30)
-    -- btn:SetText('go')
-    -- btn:SetAttribute("type","target");
-    -- btn:SetAttribute("unit","nameExample");
-
-
--- -------------------------------------------------------------------------------------------------------------
 end
 
 -- +++

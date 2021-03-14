@@ -28,5 +28,11 @@ vm.Config = {
         white = {1,1,1}
     },
     Fields = {'continent', 'zone', 'posX', 'posY', 'note', 'color'},
-    Separator = '<=>'
+    Separator = '<=>',
+    backDrop = {
+        bgFile = [[Interface\Buttons\WHITE8x8]],
+        edgeFile = [[Interface\Tooltips\UI-Tooltip-Border]],
+        edgeSize = 5,
+        insets = {left = 3, right = 3, top = 3, bottom = 3}
+    }
 }

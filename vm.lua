@@ -34,6 +34,8 @@ function init ()
             vm.Assistant.switchRestype()
         elseif msg == 'assist go' then
             vm.Assistant.go()
+        elseif msg == 'find' then
+            vm.Find.form()
         elseif msg == 'debug' then
             -- local round = vm.Utils.round
             -- print(UIParent:GetEffectiveScale())
