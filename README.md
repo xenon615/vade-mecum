@@ -8,3 +8,4 @@ Unzip, copy all files from vade-mecum-master directory  to /Interface/Addons/Vad
 ## Usage: 
 Bind /vm to any button or just say /vm in the chat
 In world map view press Shift + N to add note for position where cursor currently in
+/vm find   - easy targetting by target name
