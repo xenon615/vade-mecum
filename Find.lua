@@ -17,6 +17,12 @@ function createForm()
     findForm:SetSize(260, 50)
     findForm:SetBackdrop(vm.Config.backDrop)
     findForm:SetBackdropColor(0, 0, 0, 0.7)
+    findForm:EnableKeyboard(true)
+    findForm:SetScript('OnKeyUp', function(self, key)
+        if (key == 'ESCAPE') and self:IsVisible() then
+            self:Hide()
+        end
+    end)
 
     local targetName = CreateFrame("EditBox", nil, findForm, 'InputBoxTemplate')
     targetName:SetSize(160, 30)
